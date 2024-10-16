@@ -1,3 +1,0 @@
-@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
-ethereum-vault-connector/=Euler/src/evc/
-euler-vault-kit/=Euler/src/evk/
