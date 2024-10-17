@@ -13,6 +13,9 @@ contract testComptroller is ComptrollerInterface {
 
     function enterMarkets(address[] memory cTokens) external override returns (uint256[] memory) {
     }
+
+    function exitMarket(address) external override returns (uint){}
+
     function getAllMarkets() external override view returns (address[] memory){
     }
 

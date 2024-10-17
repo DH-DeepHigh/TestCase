@@ -5,6 +5,8 @@ import "./UnitrollerInterface.sol";
 
 interface ComptrollerInterface {
     function enterMarkets(address[] memory cTokens) external returns (uint256[] memory);
+
+    function exitMarket(address) external returns (uint);
     
     function getAllMarkets() external view returns (address[] memory);
     
