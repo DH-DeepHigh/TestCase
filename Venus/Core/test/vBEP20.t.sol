@@ -247,7 +247,30 @@ contract vBEP20_Test is Test, VenusUtils {
         liquidator.liquidateBorrow(address(vUSDC),user, amount+1, vETH);
         
          //borrower collateral totalToken(4818919171) >= seizeToken Amount
-         liquidator.liquidateBorrow(address(vUSDC),user, 7e17, vETH);
+         liquidator.liquidateBorrow(address(vUSDC),user, 1, vETH);
+    }
+
+    function test_enterMarket() public {
+        address[] memory markets = new address[](1);
+        markets[0] = address(vETH);
+        comptroller.enterMarkets(markets);
+
+        // Checks
+        address[] memory assetsIn = comptroller.getAssetsIn(address(this));
+        assertEq(assetsIn[0], address(vETH));
+    }
+    function test_exitMarket() public {
+        address[] memory markets = new address[](1);
+        markets[0] = address(vETH);
+        comptroller.enterMarkets(markets);
+
+        address[] memory assetsIn = comptroller.getAssetsIn(address(this));
+        assertEq(assetsIn.length, 1);
+
+        comptroller.exitMarket(address(vETH));
+        assetsIn = comptroller.getAssetsIn(address(this));
+        //check delete asset
+        assertEq(assetsIn.length, 0);
     }
 
 
