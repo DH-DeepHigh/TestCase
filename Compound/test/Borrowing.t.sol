@@ -56,6 +56,7 @@ contract BorrowingTest is Test, TestUtils, Exponential, tools, TokenErrorReporte
         assertEq(Errorcode, 0);
     }
     function test_borrow_underlyingPrice() public{
+        //set underlying price zero  & Previous underlying price
         uint amount=set_borrow_price_zero();
 
         bytes memory errorcode = abi.encodeWithSignature("BorrowComptrollerRejection(uint256)", 13);
