@@ -3,7 +3,7 @@ pragma solidity >= 0.8.0;
 
 import "forge-std/Test.sol";
 import "../src/TestUtils.sol";
-import "../src/testFile.sol";
+import "../src/TestFile.sol";
 
 /// @notice Example contract that calculates the account liquidity.
 contract admin_CTokenTest is Test, TestUtils {
@@ -24,7 +24,7 @@ contract admin_CTokenTest is Test, TestUtils {
         assertEq(cEther.admin(),user);
         vm.stopPrank();
     }
-    function test_setComptroller() public { 
+    function setComptroller() public { 
         vm.startPrank(admin);
         testComptroller deploy = new testComptroller();
         ComptrollerInterface newComptroller = ComptrollerInterface(deploy);

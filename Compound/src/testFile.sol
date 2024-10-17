@@ -3,6 +3,8 @@ pragma solidity ^0.8.10;
 
 import "./interfaces/ComptrollerInterface.sol";
 import "./interfaces/CTokenInterface.sol";
+import "forge-std/Test.sol";
+import "./TestUtils.sol";
 
 contract testComptroller is ComptrollerInterface {
     /// @notice Indicator that this is a Comptroller contract (for inspection)
@@ -13,6 +15,20 @@ contract testComptroller is ComptrollerInterface {
 
     function enterMarkets(address[] memory cTokens) external override returns (uint256[] memory) {
     }
+    function mintAllowed(address cToken, address minter, uint mintAmount) override external returns (uint){}
+    function redeemAllowed(address cToken, address redeemer, uint redeemTokens) override external returns (uint){}
+    function borrowAllowed(address cToken, address borrower, uint borrowAmount) override external returns (uint){}
+    function repayBorrowAllowed(
+        address cToken,
+        address payer,
+        address borrower,
+        uint repayAmount) override external returns (uint){}
+    function liquidateBorrowAllowed(
+        address cTokenBorrowed,
+        address cTokenCollateral,
+        address liquidator,
+        address borrower,
+        uint repayAmount) override external returns (uint){}
 
     function exitMarket(address) external override returns (uint){}
 
@@ -210,4 +226,57 @@ contract testCToken is CTokenInterface{
     
     //only cErc20delegator
     function _setImplementation(address implementation_, bool allowResign, bytes memory becomeImplementationData)  override external{}
+
+    function accrualBlockNumber() external override returns (uint){}
+}
+
+contract tools is Test, TestUtils{
+    using stdStorage for StdStorage;
+    testCToken deploy = new testCToken();
+    CTokenInterface Not_registered_CToken= CTokenInterface(deploy);
+
+    function set_pause() public{
+        vm.startPrank(admin);
+        comptroller._setMintPaused(cEther, true);
+        comptroller._setMintPaused(cDai, true);
+        
+        comptroller._setBorrowPaused(cEther, true);
+        comptroller._setBorrowPaused(cDai, true);
+
+        comptroller._setMintPaused(cEther, true);
+        comptroller._setMintPaused(cDai, true);
+
+        comptroller._setSeizePaused(true);
+        vm.stopPrank();
+    }
+    function set_unpause() public{
+        vm.startPrank(admin);
+        comptroller._setMintPaused(cEther, false);
+        comptroller._setMintPaused(cDai, false);
+
+        comptroller._setBorrowPaused(cEther, false);
+        comptroller._setBorrowPaused(cDai, false);
+
+        comptroller._setMintPaused(cEther, false);
+        comptroller._setMintPaused(cDai, false);
+
+        comptroller._setSeizePaused(false);
+        vm.stopPrank();
+    }
+    function set_borrow_price_zero() public returns(uint){
+        uint price = oracle.getUnderlyingPrice(address(cDai));
+        vm.mockCall(
+            address(oracle),
+            abi.encodeWithSelector(oracle.getUnderlyingPrice.selector, address(cDai)),
+            abi.encode(0) 
+        );
+        return price;
+    }
+    function set_borrow_price_rollback(uint amount) public{
+        vm.mockCall(
+            address(oracle),
+            abi.encodeWithSelector(oracle.getUnderlyingPrice.selector, address(cDai)),
+            abi.encode(amount) 
+        );
+    }
 }

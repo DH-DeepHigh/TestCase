@@ -3,7 +3,7 @@ pragma solidity >= 0.8.0;
 
 import "forge-std/Test.sol";
 import "../src/TestUtils.sol";
-import "../src/testFile.sol";
+import "../src/TestFile.sol";
 
 /// @notice Example contract that calculates the account liquidity.
 contract admin_ComptrollerTest is Test, TestUtils {
