@@ -59,6 +59,21 @@ interface ComptrollerInterface {
     address cTokenCollateral,
     uint repayAmount) external view returns (uint, uint);
 
+    function mintAllowed(address cToken, address minter, uint mintAmount)  external returns (uint);
+    function redeemAllowed(address cToken, address redeemer, uint redeemTokens)  external returns (uint);
+    function borrowAllowed(address cToken, address borrower, uint borrowAmount)  external returns (uint);
+    function repayBorrowAllowed(
+        address cToken,
+        address payer,
+        address borrower,
+        uint repayAmount)  external returns (uint);
+    function liquidateBorrowAllowed(
+        address cTokenBorrowed,
+        address cTokenCollateral,
+        address liquidator,
+        address borrower,
+        uint repayAmount)  external returns (uint);
+
     //admin function
     function _setPriceOracle(address newOracle) external returns (uint);
 

@@ -242,8 +242,30 @@ contract vBNB_Test is Test, VenusUtils {
          //repayAmount =< maxRepay(closeFactor * totalBorrow)
         liquidator.liquidateBorrow(address(vUSDC),user, amount+1, vBNB);
         
-         //borrower collateral totalToken(4083941419) >= seizeToken Amount
-         liquidator.liquidateBorrow(address(vUSDC),user, 0.5 ether, vBNB);
+        //borrower collateral totalToken(4083941419) >= seizeToken Amount
+        liquidator.liquidateBorrow(address(vUSDC),user, 1, vBNB);
+    }
+    function test_enterMarket() public {
+        address[] memory markets = new address[](1);
+        markets[0] = address(vBNB);
+        comptroller.enterMarkets(markets);
+
+        // Checks
+        address[] memory assetsIn = comptroller.getAssetsIn(address(this));
+        assertEq(assetsIn[0], address(vBNB));
+    }
+    function test_exitMarket() public {
+        address[] memory markets = new address[](1);
+        markets[0] = address(vBNB);
+        comptroller.enterMarkets(markets);
+
+        address[] memory assetsIn = comptroller.getAssetsIn(address(this));
+        assertEq(assetsIn.length, 1);
+
+        comptroller.exitMarket(address(vBNB));
+        assetsIn = comptroller.getAssetsIn(address(this));
+        //check delete asset
+        assertEq(assetsIn.length, 0);
     }
 
 
