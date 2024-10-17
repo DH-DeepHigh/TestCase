@@ -188,6 +188,28 @@ contract cETHTest is Test, TestUtils {
         //borrower collateral totalToken >= seizeToken Amount
         cDai.liquidateBorrow(user,amount,cEther);
     }
+    function test_enterMarket() public {
+        address[] memory markets = new address[](1);
+        markets[0] = address(cEther);
+        comptroller.enterMarkets(markets);
+
+        // Checks
+        address[] memory assetsIn = comptroller.getAssetsIn(address(this));
+        assertEq(assetsIn[0], address(cEther));
+    }
+    function test_exitMarket() public {
+        address[] memory markets = new address[](1);
+        markets[0] = address(cEther);
+        comptroller.enterMarkets(markets);
+
+        address[] memory assetsIn = comptroller.getAssetsIn(address(this));
+        assertEq(assetsIn.length, 1);
+
+        comptroller.exitMarket(address(cEther));
+        assetsIn = comptroller.getAssetsIn(address(this));
+        //check delete asset
+        assertEq(assetsIn.length, 0);
+    }
     receive() payable external{}
 
 }

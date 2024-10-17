@@ -5,7 +5,6 @@ import "forge-std/Test.sol";
 
 import "../src/TestUtils.sol";
 
-
 /// @notice Example contract that calculates the account liquidity.
 contract cErc20test is Test, TestUtils {
     address user =address(0x1234);
@@ -212,10 +211,28 @@ contract cErc20test is Test, TestUtils {
         cDai._addReserves(amount);
         assertEq(cDai.totalReserves() - amount , bf);
     }
-    function test_claimComp() public {
+    function test_enterMarket() public {
+        address[] memory markets = new address[](1);
+        markets[0] = address(cDai);
+        comptroller.enterMarkets(markets);
 
+        // Checks
+        address[] memory assetsIn = comptroller.getAssetsIn(address(this));
+        assertEq(assetsIn[0], address(cDai));
     }
+    function test_exitMarket() public {
+        address[] memory markets = new address[](1);
+        markets[0] = address(cDai);
+        comptroller.enterMarkets(markets);
 
+        address[] memory assetsIn = comptroller.getAssetsIn(address(this));
+        assertEq(assetsIn.length, 1);
+
+        comptroller.exitMarket(address(cDai));
+        assetsIn = comptroller.getAssetsIn(address(this));
+        //check delete asset
+        assertEq(assetsIn.length, 0);
+    }
 
     receive() payable external{}
 
