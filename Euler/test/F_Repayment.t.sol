@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {EVaultTestBase} from "../forkUtils/testBase/EVaultTestBase.sol";
+import {EVaultTestBase} from "./forkUtils/testBase/EVaultTestBase.sol";
 import {Events} from "../src/EVault/shared/Events.sol";
 import {SafeERC20Lib} from "../src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
@@ -23,22 +23,123 @@ contract Test_CollateralWithdraw is EVaultTestBase {
     address lender;
     address borrower;
 
-    function setUp() public {
+    function setUp() public override {
         super.setUp();
+        cheat.createSelectFork("eth_mainnet", BLOCK_NUMBER);
 
         lender = makeAddr("lender");
         borrower = makeAddr("borrower"); 
 
         vm.startPrank(lender);
         deal(address(DAI), lender, type(uint256).max);
-        DAI.approve(address(DAI), type(uint256).max);
-        eDAI.deposit(10_000 * 1e18);
+        DAI.approve(address(eDAI), type(uint256).max);
+        eDAI.deposit(10_000 * 1e18, lender);
 
         vm.startPrank(borrower);
-        deal(address(WETH), lender, type(uint256).max);
-        WETH.approve(address(WETH), type(uint256).max);
-        eWETH.deposit(10 * 1e18);
+        deal(address(WETH), borrower, type(uint256).max);
+        WETH.approve(address(eWETH), type(uint256).max);
+        eWETH.deposit(10 * 1e18, borrower);
     }
 
-    function test_
+    function test_repay_simple() public {
+        uint256 borrowAmount = 10_000 * 1e18;
+
+        uint256 totalBorrowsBefore = eDAI.totalBorrows();
+        uint256 totalBorrowsExactBefore = eDAI.totalBorrowsExact();
+        
+        vm.startPrank(borrower);
+
+        evc.enableController(borrower, address(eDAI));
+        evc.enableCollateral(borrower, address(eWETH));
+
+        // borrow
+        eDAI.borrow(borrowAmount, borrower);
+
+        assertEq(DAI.balanceOf(borrower), borrowAmount);
+
+        // repay
+        DAI.approve(address(eDAI), type(uint256).max);
+        eDAI.repay(type(uint256).max, borrower);
+
+        assertEq(DAI.balanceOf(borrower), 0);
+
+        evc.disableCollateral(borrower, address(eWETH));
+        assertEq(evc.getCollaterals(borrower).length, 0);
+
+        eDAI.disableController();
+        assertEq(evc.getControllers(borrower).length, 0);
+    }
+
+    function test_repay_cannot_unlistable_unhealthy() public {
+        uint256 borrowAmount = 10_000 * 1e18;
+
+        uint256 totalBorrowsBefore = eDAI.totalBorrows();
+        uint256 totalBorrowsExactBefore = eDAI.totalBorrowsExact();
+        
+        vm.startPrank(borrower);
+
+        evc.enableController(borrower, address(eDAI));
+        evc.enableCollateral(borrower, address(eWETH));
+
+        // borrow
+        eDAI.borrow(borrowAmount, borrower);
+
+        assertEq(DAI.balanceOf(borrower), borrowAmount);
+
+        // repay (unhealthy)
+        DAI.approve(address(eDAI), type(uint256).max);
+        eDAI.repay(borrowAmount - 1, borrower);
+
+        assertEq(DAI.balanceOf(borrower), 1);
+
+        vm.expectRevert();
+        evc.disableCollateral(borrower, address(eWETH));
+
+        vm.expectRevert();
+        eDAI.disableController();
+
+        // repay all
+        eDAI.repay(1, borrower);
+        assertEq(DAI.balanceOf(borrower), 0);
+
+        evc.disableCollateral(borrower, address(eWETH));
+        assertEq(evc.getCollaterals(borrower).length, 0);
+        
+        eDAI.disableController();
+        assertEq(evc.getControllers(borrower).length, 0);
+    }
+
+    function test_repay_cannot_repay_overDebt() public {
+        uint256 borrowAmount = 10_000 * 1e18;
+
+        uint256 totalBorrowsBefore = eDAI.totalBorrows();
+        uint256 totalBorrowsExactBefore = eDAI.totalBorrowsExact();
+        
+        vm.startPrank(borrower);
+
+        evc.enableController(borrower, address(eDAI));
+        evc.enableCollateral(borrower, address(eWETH));
+
+        // borrow
+        eDAI.borrow(borrowAmount, borrower);
+
+        assertEq(DAI.balanceOf(borrower), borrowAmount);
+
+        // repay
+        deal(address(DAI), borrower, type(uint256).max);
+
+        DAI.approve(address(eDAI), type(uint256).max);
+
+        vm.expectRevert(Errors.E_RepayTooMuch.selector);
+        eDAI.repay(borrowAmount + 1, borrower);
+
+        // nice repay
+        eDAI.repay(borrowAmount, borrower);
+
+        evc.disableCollateral(borrower, address(eWETH));
+        assertEq(evc.getCollaterals(borrower).length, 0);
+        
+        eDAI.disableController();
+        assertEq(evc.getControllers(borrower).length, 0);
+    }
 }
