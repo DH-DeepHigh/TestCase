@@ -10,12 +10,12 @@ import "../src/interfaces/TokenErrorReporter.sol";
 contract BorrowingTest is Test, TestUtils, Exponential, tools{
     address borrower = address(this);
     uint borrowAmount = 10000 * 1e18;
-    uint mintAmount = 10* 1e18;
+    uint supplyAmount = 10* 1e18;
     
     function setUp() public{
         // Fork mainnet at block 20_941_968.
         cheat.createSelectFork("mainnet", BLOCK_NUMBER);
-        cEther.mint{value : mintAmount}();
+        cEther.mint{value : supplyAmount}();
 
         address[] memory cTokens = new address[](1);
         cTokens[0] = address(cEther);
@@ -38,13 +38,12 @@ contract BorrowingTest is Test, TestUtils, Exponential, tools{
         assertEq(dai.balanceOf(borrower), borrowAmount);
     }
 
-    function test_borrow_checkMarketList() public{
+    function test_borrow_checkMarket() public{
         /*
-        Market list check
-        mint call Sequence mint => mintInternal => mintFresh => mintAllowed
+        borrow call Sequence borrow => borrowInternal => borrowFresh => borrowAllowed
         */
-        vm.startPrank(address(Not_registered_CToken));
-        uint Errorcode =comptroller.borrowAllowed(address(Not_registered_CToken),borrower,borrowAmount);
+        vm.startPrank(address(Not_registered_cToken));
+        uint Errorcode =comptroller.borrowAllowed(address(Not_registered_cToken),borrower,borrowAmount);
         vm.stopPrank();
         // Errorcode = MARKET_NOT_LISTED
         assertEq(Errorcode,9);
@@ -61,7 +60,6 @@ contract BorrowingTest is Test, TestUtils, Exponential, tools{
 
         bytes memory errorcode = abi.encodeWithSignature("BorrowComptrollerRejection(uint256)", 13);
         vm.expectRevert(errorcode);
-        
         cDai.borrow(borrowAmount);
 
         set_borrow_price_rollback(amount);
@@ -79,35 +77,51 @@ contract BorrowingTest is Test, TestUtils, Exponential, tools{
         assertEq(result,true);
     }
     function test_borrow_checkBorrowCap() public {
+        deal(address(cEther),borrower,10000 * 1e18);
         uint totalBorrow=cDai.totalBorrowsCurrent();
-        uint borrowCap = 80000000 * 1e18; 
+        uint borrowCap = 80000000 * 1e18;
+        uint gap = borrowCap - totalBorrow;
+         
         
         vm.expectRevert("market borrow cap reached");
-        cDai.borrow(borrowCap - totalBorrow);
+        cDai.borrow(gap);
+
+        //borrow limit
+        cDai.borrow(dai.balanceOf(address(cDai))-1);
     }
-    function test_borrow_overLTV() public {
+    function test_borrow_checkLTV() public {
         uint amount = 20000 * 1e18;
         address[] memory market = new address[](1);
         market[0] = address(cDai);
 
         comptroller.enterMarkets(market);
-
+        //over LTV
         (,,uint shortfall)=comptroller.getHypotheticalAccountLiquidity(borrower,address(cDai),0,amount);
         assertGt(shortfall, 0);
 
         bytes memory errorcode = abi.encodeWithSignature("BorrowComptrollerRejection(uint256)", 4);
         vm.expectRevert(errorcode);
         cDai.borrow(amount);
+
+        //success
+        cDai.borrow(borrowAmount);
     }
-    function test_borrow_checkaccrueBlock() public {
+    function test_borrow_checkAccrueBlock() public {
         cDai.borrow(borrowAmount);
         assertEq(cDai.accrualBlockNumber(),block.number);
     }
-    function testFail_Borrow_checkAmount()public{
+    function testFail_borrow_checkAmount()public{
         //can't catch errorcode BorrowCashNotAvailable()
-        cEther.mint{value : borrower.balance}();
+        deal(address(cEther),borrower, 100000 * 1e18);
         bytes memory errorcode = abi.encodeWithSignature("BorrowCashNotAvailable()");
         cDai.borrow(dai.balanceOf(address(cDai))+1);
     }
+    function test_borrow_checkOut() public{
+        cDai.borrow(borrowAmount);
+        //return Errorcode
+        uint Errorcode=comptroller.exitMarket(address(cDai));
+        //Errorcode => NONZERO_BORROW_BALANCE
+        assertEq(Errorcode,12);
+    }   
     
 }

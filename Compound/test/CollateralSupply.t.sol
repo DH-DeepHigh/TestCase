@@ -7,68 +7,67 @@ import "../src/interfaces/Exponential.sol";
 import "../src/TestFile.sol";
 
 contract CollateralSupplyTest is Test, TestUtils, Exponential, tools{
-    address minter = address(this);
-    uint mintAmount = 10 * 1e18;
+    address lender = address(this);
+    uint supplyAmount = 10 * 1e18;
     
     function setUp() public{
         // Fork mainnet at block 20_941_968.
         cheat.createSelectFork("mainnet", BLOCK_NUMBER);
-        deal(address(dai),address(this),mintAmount);
+        deal(address(dai),address(this),supplyAmount);
         dai.approve(address(cDai),type(uint).max);
     }
 
     function test_supplyCErc20_simple() public{
-        cDai.mint(mintAmount);
-        uint totalcDai = cDai.balanceOf(minter);
+        cDai.mint(supplyAmount);
+        uint totalcDai = cDai.balanceOf(lender);
         
         Exp memory exchangeRate = Exp(cDai.exchangeRateCurrent());
-        uint amount = div_(mintAmount,exchangeRate);
+        uint amount = div_(supplyAmount,exchangeRate);
         assert(totalcDai == amount);
 
         
     }
     function test_supplyCEther_simple() public{
-        cEther.mint{value: mintAmount}();
-        uint totalcEther = cEther.balanceOf(minter); 
+        cEther.mint{value: supplyAmount}();
+        uint totalcEther = cEther.balanceOf(lender); 
 
         Exp memory exchangeRate = Exp(cEther.exchangeRateCurrent());
-        uint amount = div_(mintAmount,exchangeRate);
+        uint amount = div_(supplyAmount,exchangeRate);
         assert(totalcEther == amount);
     }
     function test_supplyCEther_pause() public{
         set_pause();
         vm.expectRevert("mint is paused");
-        cEther.mint{value : mintAmount}();
+        cEther.mint{value : supplyAmount}();
         
         set_unpause();
-        cEther.mint{value : mintAmount}();
+        cEther.mint{value : supplyAmount}();
 
-        assertGt(cEther.balanceOf(minter),0);
+        assertGt(cEther.balanceOf(lender),0);
     }
 
     function test_supplyCErc20_pause() public{
         set_pause();
         vm.expectRevert("mint is paused");
-        cDai.mint(mintAmount);
+        cDai.mint(supplyAmount);
         
         set_unpause();
-        cDai.mint(mintAmount);
+        cDai.mint(supplyAmount);
 
-        assertGt(cDai.balanceOf(minter),0);
+        assertGt(cDai.balanceOf(lender),0);
     }
-    function test_supply_marketList() public{
+    function test_supply_checkMarket() public{
         /*
-        Market list check
         mint call Sequence mint => mintInternal => mintFresh => mintAllowed
         */
-        vm.startPrank(address(Not_registered_CToken));
-        uint Errorcode =comptroller.mintAllowed(address(Not_registered_CToken),minter,mintAmount);
+        vm.startPrank(address(Not_registered_cToken));
+        uint Errorcode =comptroller.mintAllowed(address(Not_registered_cToken),lender,supplyAmount);
         vm.stopPrank();
         // Errorcode = MARKET_NOT_LISTED
         assertEq(Errorcode,9);
         
         vm.startPrank(address(cDai));
-        Errorcode =comptroller.mintAllowed(address(cDai),minter,mintAmount);
+        Errorcode =comptroller.mintAllowed(address(cDai),lender,supplyAmount);
         vm.stopPrank();
         // Errorcode =NO.ERROR
         assertEq(Errorcode, 0);

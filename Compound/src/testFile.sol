@@ -149,6 +149,7 @@ contract testInterestRateModel is InterestRateModel{
 
 contract testCToken is CTokenInterface{
     bool public constant isCToken = true;
+    uint public constant ERROR = 1;
     function balanceOf(address owner) override external view returns (uint256){}
 
     function balanceOfUnderlying(address owner) override external returns (uint256){}
@@ -177,7 +178,8 @@ contract testCToken is CTokenInterface{
     
     function repayBorrowBehalf(address borrower) override external payable{}
 
-    function redeem(uint256 redeemTokens) override external returns (uint256){}
+    function redeem(uint256 redeemTokens) override external returns (uint256){
+    }
 
     function redeemUnderlying(uint256 redeemAmount) override external returns (uint256){}
 
@@ -201,7 +203,8 @@ contract testCToken is CTokenInterface{
 
     function reserveFactorMantissa() override external returns (uint){}
 
-    function accrueInterest() override external returns (uint){}
+    function accrueInterest() override external returns (uint) {}
+
     
     function interestRateModel() override external returns (address){}
 
@@ -242,7 +245,7 @@ contract testCToken is CTokenInterface{
 contract tools is Test, TestUtils{
     using stdStorage for StdStorage;
     testCToken deploy = new testCToken();
-    CTokenInterface Not_registered_CToken= CTokenInterface(deploy);
+    CTokenInterface Not_registered_cToken= CTokenInterface(deploy);
 
     function set_pause() public{
         vm.startPrank(admin);
@@ -288,13 +291,11 @@ contract tools is Test, TestUtils{
             abi.encode(amount) 
         );
     }
-    function set_borrow_market_membership(address account) public{
-        stdstore
-            .target(address(comptroller)) // MarketContract 주소
-            .sig("markets(address)") // 매핑 접근을 위한 시그니처
-            .with_key(address(cDai)) // 수정할 마켓 주소
-            .sig("accountMembership(adress)")
-            .with_key(account)
-            .checked_write(uint(0));
+    function pass_accrueInterest() public{
+        vm.mockCall(
+            address(Not_registered_cToken),
+            abi.encodeWithSelector(Not_registered_cToken.accrueInterest.selector),
+            abi.encode(0)
+        );
     }
 }
