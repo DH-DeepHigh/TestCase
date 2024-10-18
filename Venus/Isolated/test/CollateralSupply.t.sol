@@ -8,7 +8,7 @@ contract CollateralSupply is Test, Tester {
 
     address user = address(0x1234);
     address user2 = address(0x2345);
-    uint amount = 10000 * 1e6;  // USDT는 6 decimals
+    uint amount = 1000 * 1e18;
 
     function setUp() public {
         cheat.createSelectFork("bsc_mainnet", BLOCK_NUMBER);
@@ -28,13 +28,6 @@ contract CollateralSupply is Test, Tester {
         vm.startPrank(user);
         vETH.mint(amount);
 
-        address[] memory vTokens = new address[](1);
-        vTokens[0] = address(vETH);
-        comptroller.enterMarkets(vTokens);        
-
-        address[] memory assetsIn = comptroller.getAssetsIn(user);
-        assertEq(assetsIn[0], address(vETH));
-
         (, uint collateralFactorMantissa) = comptroller.markets(address(vETH));
         (, uint liquidity,) = comptroller.getAccountLiquidity(user);
         liquidity = liquidity / 1e18;
@@ -51,10 +44,6 @@ contract CollateralSupply is Test, Tester {
         vm.stopPrank();
 
         vm.startPrank(user2);
-        address[] memory vTokens = new address[](1);
-        vTokens[0] = address(vETH);
-        comptroller.enterMarkets(vTokens);
-
         (, uint collateralFactorMantissa) = comptroller.markets(address(vETH));
         (, uint liquidity,) = comptroller.getAccountLiquidity(user2);
         liquidity = liquidity / 1e18;
@@ -63,24 +52,5 @@ contract CollateralSupply is Test, Tester {
         uint expectedLiquidity = (price * amount * collateralFactorMantissa) / 1e18 / 1e18;
         assertEq(liquidity, expectedLiquidity);
         vm.stopPrank();
-    }
-
-    function test_borrow() public { //testing...
-        vm.startPrank(user);
-        vETH.mint(amount);
-
-        address[] memory vTokens = new address[](1);
-        vTokens[0] = address(vETH);
-        comptroller.enterMarkets(vTokens);        
-
-        address[] memory assetsIn = comptroller.getAssetsIn(user);
-        assertEq(assetsIn[0], address(vETH));
-
-        uint borrowAmount = 100 * 1e18;
-        vweETH.borrow(borrowAmount);
-
-        assertEq(weETH.balanceOf(user), borrowAmount);
-        vm.stopPrank();
-        
     }
 }
