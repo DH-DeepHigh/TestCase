@@ -5,6 +5,16 @@ import "./UnitrollerInterface.sol";
 
 interface ComptrollerInterface {
     function enterMarkets(address[] memory cTokens) external returns (uint256[] memory);
+    
+    function getHypotheticalAccountLiquidity(
+        address account,
+        address vTokenModify,
+        uint256 redeemTokens,
+        uint256 borrowAmount
+    ) external view returns (uint256, uint256, uint256);
+
+    
+    function checkMembership(address account, address cToken) external view returns (bool);
 
     function exitMarket(address) external returns (uint);
     

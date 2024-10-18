@@ -61,13 +61,15 @@ contract CollateralSupplyTest is Test, TestUtils, Exponential, tools{
         Market list check
         mint call Sequence mint => mintInternal => mintFresh => mintAllowed
         */
+        vm.startPrank(address(Not_registered_CToken));
         uint Errorcode =comptroller.mintAllowed(address(Not_registered_CToken),minter,mintAmount);
-        
+        vm.stopPrank();
         // Errorcode = MARKET_NOT_LISTED
         assertEq(Errorcode,9);
-
-        Errorcode =comptroller.mintAllowed(address(cDai),minter,mintAmount);
         
+        vm.startPrank(address(cDai));
+        Errorcode =comptroller.mintAllowed(address(cDai),minter,mintAmount);
+        vm.stopPrank();
         // Errorcode =NO.ERROR
         assertEq(Errorcode, 0);
     }

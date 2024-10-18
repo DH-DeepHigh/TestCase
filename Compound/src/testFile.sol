@@ -12,6 +12,13 @@ contract testComptroller is ComptrollerInterface {
 
     function getAccountLiquidity(address account) external override view returns (uint, uint, uint) {
     }
+    function checkMembership(address account, address cToken) external view returns (bool){}
+    function getHypotheticalAccountLiquidity(
+        address account,
+        address vTokenModify,
+        uint256 redeemTokens,
+        uint256 borrowAmount
+    ) override external view returns (uint256, uint256, uint256){}
 
     function enterMarkets(address[] memory cTokens) external override returns (uint256[] memory) {
     }
@@ -146,6 +153,8 @@ contract testCToken is CTokenInterface{
 
     function balanceOfUnderlying(address owner) override external returns (uint256){}
 
+    function getAccountSnapshot(address account) override external view returns (uint, uint, uint, uint){}
+
     function borrow(uint256 borrowAmount) override external returns (uint256){}
     
     function borrowIndex() override external returns (uint){}
@@ -278,5 +287,14 @@ contract tools is Test, TestUtils{
             abi.encodeWithSelector(oracle.getUnderlyingPrice.selector, address(cDai)),
             abi.encode(amount) 
         );
+    }
+    function set_borrow_market_membership(address account) public{
+        stdstore
+            .target(address(comptroller)) // MarketContract 주소
+            .sig("markets(address)") // 매핑 접근을 위한 시그니처
+            .with_key(address(cDai)) // 수정할 마켓 주소
+            .sig("accountMembership(adress)")
+            .with_key(account)
+            .checked_write(uint(0));
     }
 }
