@@ -47,10 +47,11 @@ contract Borrowing is EVaultTestBase {
 
     function test_borrow_simple() public {
         uint256 borrowAmount = 10_000 * 1e18;
-        vm.startPrank(borrower1);
 
         uint256 totalBorrowsBefore = eDAI.totalBorrows();
         uint256 totalBorrowsExactBefore = eDAI.totalBorrowsExact();
+        
+        vm.startPrank(borrower1);
 
         evc.enableController(borrower1, address(eDAI));
         evc.enableCollateral(borrower1, address(eWETH));
@@ -64,21 +65,14 @@ contract Borrowing is EVaultTestBase {
         assertEq(eDAI.totalBorrowsExact() - totalBorrowsExactBefore, borrowAmount << INTERNAL_DEBT_PRECISION_SHIFT);
     }
 
-    function test_borrow_market_exist() public { // 아직 미완성입니다.
+    function test_borrow_market_exist() public {
         IEVault eVault = IEVault(makeAddr("eVault"));
         
         vm.startPrank(borrower1);
-        
-        uint256 borrowAmount = 10_000 * 1e18;
-        uint256 totalBorrowsBefore = eDAI.totalBorrows();
-        uint256 totalBorrowsExactBefore = eDAI.totalBorrowsExact();
 
         evc.enableCollateral(borrower1, address(eWETH));
         vm.expectRevert(Errors.EVC_EmptyError.selector);
-        evc.enableController(borrower1, address(eVault));
-        
-        
-        evc.call(address(eVault), borrower1, 0, abi.encodeWithSelector(eVault.borrow.selector, borrowAmount, borrower1));
+        evc.enableController(borrower1, address(eVault)); // borrow를 하려면, controller로 설정이 되어야 하는데, 이 부분에서 막힘.        
     }
     
     function test_borrow_registered_asset() public {
@@ -105,7 +99,7 @@ contract Borrowing is EVaultTestBase {
     }
 
     function test_borrow_registered_collateral() public {
-        uint256 borrowAmount = 10000e18;
+        uint256 borrowAmount = 10_000 * 1e18;
         uint256 totalBorrowsBefore = eDAI.totalBorrows();
         uint256 totalBorrowsExactBefore = eDAI.totalBorrowsExact();
 
@@ -127,4 +121,87 @@ contract Borrowing is EVaultTestBase {
         assertEq(eDAI.totalBorrowsExact() - totalBorrowsExactBefore, borrowAmount << INTERNAL_DEBT_PRECISION_SHIFT);
     }
 
+    function test_borrow_below_borrow_cap() public { // 미완성
+        // (uint256 eDAISupplyCap, uint256 eDAIBorrowCap) = eDAI.caps();
+        // (uint256 eWETHSupplyCap, ) = eWETH.caps();
+        // console.log(eDAISupplyCap, eDAIBorrowCap, eWETHSupplyCap);
+
+        // uint256 totalBorrowsBefore = eDAI.totalBorrows();
+        // uint256 totalBorrowsExactBefore = eDAI.totalBorrowsExact();
+        
+        // vm.prank(lender);
+        // eDAI.deposit(eDAISupplyCap - eDAI.totalSupply(), lender);
+
+        // vm.startPrank(borrower1);
+        
+        // eWETH.deposit(eWETHSupplyCap - eWETH.totalSupply(), borrower1);
+
+        // evc.enableController(borrower1, address(eDAI));
+        // evc.enableCollateral(borrower1, address(eWETH));
+
+        // eDAI.borrow(eDAIBorrowCap - totalBorrowsBefore, borrower1);
+    }
+
+    function test_borrow_liquidity_check() public {
+        uint256 totalBorrowsBefore = eDAI.totalBorrows();
+        uint256 totalBorrowsExactBefore = eDAI.totalBorrowsExact();
+    
+        vm.startPrank(borrower1);
+        
+        evc.enableController(borrower1, address(eDAI));
+        evc.enableCollateral(borrower1, address(eWETH));
+
+        uint256 collateralValue = calculateCollateralPrices(address(eDAI), borrower1, true);
+        (, uint256 maxBorrow) = oracle.getQuotes(collateralValue, unitOfAccount, eDAI.asset());
+        
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eDAI.borrow(maxBorrow + 1, borrower1);
+
+        eDAI.borrow(maxBorrow, borrower1);
+
+        assertEq(DAI.balanceOf(borrower1), maxBorrow);
+        assertEq(eDAI.debtOf(borrower1), maxBorrow);
+        assertEq(eDAI.debtOfExact(borrower1), maxBorrow << INTERNAL_DEBT_PRECISION_SHIFT);
+        assertEq(eDAI.totalBorrows() - totalBorrowsBefore, maxBorrow);
+        assertEq(eDAI.totalBorrowsExact() - totalBorrowsExactBefore, maxBorrow << INTERNAL_DEBT_PRECISION_SHIFT);
+    }
+
+    function test_borrow_over_market_balance() public {
+        uint256 marketBalance = eDAI.cash();
+        uint256 totalBorrowsBefore = eDAI.totalBorrows();
+        uint256 totalBorrowsExactBefore = eDAI.totalBorrowsExact();
+
+        vm.startPrank(borrower1);
+        
+        eWETH.deposit(10_000 * 1e18, borrower1);
+
+        evc.enableController(borrower1, address(eDAI));
+        evc.enableCollateral(borrower1, address(eWETH));
+
+        vm.expectRevert(Errors.E_InsufficientCash.selector);
+        eDAI.borrow(marketBalance + 1, borrower1); // cannot borrow more than market balance
+
+        eDAI.borrow(marketBalance, borrower1);
+
+        assertEq(DAI.balanceOf(borrower1), marketBalance);
+        assertEq(eDAI.debtOf(borrower1), marketBalance);
+        assertEq(eDAI.debtOfExact(borrower1), marketBalance << INTERNAL_DEBT_PRECISION_SHIFT);
+        assertEq(eDAI.totalBorrows() - totalBorrowsBefore, marketBalance);
+        assertEq(eDAI.totalBorrowsExact() - totalBorrowsExactBefore, marketBalance << INTERNAL_DEBT_PRECISION_SHIFT); 
+    }
+
+    function test_borrow_below_total_balance() public {
+        uint256 marketBalance = DAI.balanceOf(address(eDAI));
+
+        vm.startPrank(borrower1);
+        eWETH.deposit(100 * 1e18, borrower1);      
+
+        evc.enableController(borrower1, address(eDAI));
+        evc.enableCollateral(borrower1, address(eWETH));
+
+        vm.expectRevert(Errors.E_InsufficientCash.selector);
+        eDAI.borrow(marketBalance + 1, borrower1);
+
+        eDAI.borrow(marketBalance, borrower1);
+    }
 }

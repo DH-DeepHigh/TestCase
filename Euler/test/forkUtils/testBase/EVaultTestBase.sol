@@ -67,7 +67,7 @@ contract addressUtils {
     GenericFactory factory = GenericFactory(0x29a56a1b8214D9Cf7c5561811750D5cBDb45CC8e);
     address permit2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
     IPriceOracle oracle = IPriceOracle(0x7d67eFCFF0757992141511D6dfB60AEf89629974);
-
+    address unitOfAccount = 0x0000000000000000000000000000000000000348;
     // address initializeModule;
     // address tokenModule;
     // address vaultModule;
@@ -149,7 +149,6 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2, addressUt
     uint32 internal constant SYNTH_VAULT_HOOKED_OPS = OP_DEPOSIT | OP_MINT | OP_REDEEM | OP_SKIM | OP_REPAY_WITH_SHARES;
 
     function createSynthEVault(address asset) internal returns (IEVault) {
-        address unitOfAccount = address(1);
         IEVault v = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(asset), address(oracle), unitOfAccount))
         );
@@ -167,9 +166,25 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2, addressUt
         require(subAccountId <= 256, "invalid subAccountId");
         return address(uint160(uint160(primary) ^ subAccountId));
     }
+
+    function calculateCollateralPrices(address controller, address account, bool liquidate) internal view returns (uint256 value) {
+        address[] memory collaterals = evc.getCollaterals(account);
+
+        for (uint256 i; i < collaterals.length; ++i) {
+            value += getCollateralValue(controller, account, IEVault(collaterals[i]), liquidate);
+        }
+    }
+
+    function getCollateralValue(address controller, address account, IEVault collateral, bool liquidation) internal view returns (uint256 value) {
+        if (liquidation) {
+            value = oracle.getQuote(collateral.balanceOf(account), collateral.asset(), unitOfAccount);
+        } else {
+            (value,) = oracle.getQuotes(collateral.balanceOf(account), collateral.asset(), unitOfAccount);
+        }
+
+        value = value * IEVault(controller).LTVBorrow(address(collateral)) / 1e4;
+    }
 }
-
-
 
 contract MockHook is IHookTarget {
     error E_OnlyAssetCanDeposit();
