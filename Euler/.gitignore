@@ -22,3 +22,5 @@ _corpus/
 # Coverage directory
 coverage/
 *.info
+
+foundry.toml
