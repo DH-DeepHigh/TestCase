@@ -7,6 +7,8 @@ interface CTokenInterface {
     function balanceOf(address owner) external view returns (uint256);
 
     function balanceOfUnderlying(address owner) external returns (uint256);
+
+    function getAccountSnapshot(address account) external view returns (uint, uint, uint, uint);
     
     function accrualBlockNumber() external returns (uint);
 

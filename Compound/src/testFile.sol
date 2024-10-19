@@ -9,9 +9,16 @@ import "./TestUtils.sol";
 contract testComptroller is ComptrollerInterface {
     /// @notice Indicator that this is a Comptroller contract (for inspection)
     bool public constant isComptroller = true;
-
+    function borrowCaps(address vToken) override external view returns (uint){}
     function getAccountLiquidity(address account) external override view returns (uint, uint, uint) {
     }
+    function checkMembership(address account, address cToken) external view returns (bool){}
+    function getHypotheticalAccountLiquidity(
+        address account,
+        address vTokenModify,
+        uint256 redeemTokens,
+        uint256 borrowAmount
+    ) override external view returns (uint256, uint256, uint256){}
 
     function enterMarkets(address[] memory cTokens) external override returns (uint256[] memory) {
     }
@@ -146,6 +153,8 @@ contract testCToken is CTokenInterface{
 
     function balanceOfUnderlying(address owner) override external returns (uint256){}
 
+    function getAccountSnapshot(address account) override external view returns (uint, uint, uint, uint){}
+
     function borrow(uint256 borrowAmount) override external returns (uint256){}
     
     function borrowIndex() override external returns (uint){}
@@ -168,7 +177,8 @@ contract testCToken is CTokenInterface{
     
     function repayBorrowBehalf(address borrower) override external payable{}
 
-    function redeem(uint256 redeemTokens) override external returns (uint256){}
+    function redeem(uint256 redeemTokens) override external returns (uint256){
+    }
 
     function redeemUnderlying(uint256 redeemAmount) override external returns (uint256){}
 
@@ -192,7 +202,8 @@ contract testCToken is CTokenInterface{
 
     function reserveFactorMantissa() override external returns (uint){}
 
-    function accrueInterest() override external returns (uint){}
+    function accrueInterest() override external returns (uint) {}
+
     
     function interestRateModel() override external returns (address){}
 
@@ -233,7 +244,7 @@ contract testCToken is CTokenInterface{
 contract tools is Test, TestUtils{
     using stdStorage for StdStorage;
     testCToken deploy = new testCToken();
-    CTokenInterface Not_registered_CToken= CTokenInterface(deploy);
+    CTokenInterface Not_registered_cToken= CTokenInterface(deploy);
 
     function set_pause() public{
         vm.startPrank(admin);
@@ -277,6 +288,13 @@ contract tools is Test, TestUtils{
             address(oracle),
             abi.encodeWithSelector(oracle.getUnderlyingPrice.selector, address(cDai)),
             abi.encode(amount) 
+        );
+    }
+    function pass_accrueInterest() public{
+        vm.mockCall(
+            address(Not_registered_cToken),
+            abi.encodeWithSelector(Not_registered_cToken.accrueInterest.selector),
+            abi.encode(0)
         );
     }
 }

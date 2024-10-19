@@ -2,6 +2,7 @@
 pragma solidity >= 0.8.0;
 
 interface VTokenInterface{
+    function accrualBlockNumber() external view returns (uint);
     function balanceOf(address owner) external view returns (uint256);
 
     function mint() external payable;
