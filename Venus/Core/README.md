@@ -28,16 +28,6 @@ forge test --match-path test/name-of-the-file -vv
 ## 테스트케이스 작성 내용
 ### Venus
 
-|상태|내용|
-|--|------|
-|완료|기본적인 기능 테스트|
-|진행중|admin 기능 테스트|
-|시작 전|추가적인 테스트|
-
-Location: test/Venus/vBNB.t.sol 
-
-Location: test/Venus/vBEP20.t.sol 
-
 ## +++
 
 각 프로토콜 마다 작성해둔 테스트 코드들이 있는데 해당 테스트 코드들을 참고
