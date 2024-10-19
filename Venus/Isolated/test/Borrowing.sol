@@ -36,9 +36,7 @@ contract CollateralSupply is Test, Tester {
         address[] memory assetsIn = gComptroller.getAssetsIn(user);
         assertEq(assetsIn[0], address(vUSDT));
 
-        
         vUSDD.borrow(borrowAmount);
-
         assertEq(USDD.balanceOf(user), borrowAmount);
         vm.stopPrank();
     }
@@ -63,6 +61,7 @@ contract CollateralSupply is Test, Tester {
 
         assertEq(USDD.balanceOf(user2), borrowAmount);
         assertEq(vUSDD.borrowBalanceCurrent(user), borrowAmount);
+        vm.stopPrank();
         
     }
 }

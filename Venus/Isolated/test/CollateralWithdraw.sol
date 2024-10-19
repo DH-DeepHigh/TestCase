@@ -8,12 +8,13 @@ contract CollateralSupply is Test, Tester {
 
     address user = address(0x1234);
     address user2 = address(0x2345);
-    uint amount = 1000 * 1e18;
+    uint amount = 10000 * 1e18;
+    uint piece = 1e18;
 
     function setUp() public {
         cheat.createSelectFork("bsc_mainnet", BLOCK_NUMBER);
         deal(address(USDT), user, amount);
-        deal(address(USDT), user2, amount);
+        deal(address(USDT), user2, piece);
 
         vm.startPrank(user);
         USDT.approve(address(vUSDT), amount);
@@ -22,6 +23,7 @@ contract CollateralSupply is Test, Tester {
         vm.startPrank(user2);
         USDT.approve(address(vUSDT), amount);
         vm.stopPrank();
+
     }
 
     function getExchangeRate() internal returns (uint) {
@@ -48,29 +50,55 @@ contract CollateralSupply is Test, Tester {
         uint mintTokens = amount * 1e18 / exchangeRate;
         assertEq(vUSDTAmount, mintTokens);
 
-        vm.roll(block.number + 100);
+        vm.roll(block.number + 1);
         vUSDT.redeem(vUSDT.balanceOf(user));
         assertEq(vUSDT.balanceOf(user), 0);
 
         //should have more bnb with 100 block of interests.
         assert(USDT.balanceOf(user) > amount);
-
         vm.stopPrank();
     }
 
-    // Testing...
-    // function test_redeemUnderlying() public {
-    //     vm.startPrank(user);
+    function test_redeemBehalf() public {
+        vm.startPrank(user);
+        vUSDT.mint(amount);
 
-    //     console.log("before USDT : ", USDT.balanceOf(user));
+        gComptroller.updateDelegate(user2, true);
+        vm.stopPrank();
 
-    //     vUSDT.mint(1e18);
-    //     uint before = vUSDT.balanceOf(user);
+        vm.roll(block.number + 1);
 
-    //     console.log("after mint : ", USDT.balanceOf(user));
+        vm.startPrank(user2);
+        vUSDT.redeemBehalf(user, vUSDT.balanceOf(user));
+        assertEq(vUSDT.balanceOf(user), 0);
+        assert(USDT.balanceOf(user2) > amount);
+        vm.stopPrank();
+    }
 
-    //     vUSDT.redeemUnderlying(1e18 / 2);
-    //     // assertEq(, 1e18);
+    function test_redeemUnderlying() public {
 
-    // }
+        vm.startPrank(user2);
+        vUSDT.mint(piece);
+        console.log("before redeem USDT : ", USDT.balanceOf(user2));
+        console.log("before redeem vUSDT : ", vUSDT.balanceOf(user2));
+        
+        uint redeemAmount = piece / 2;
+        console.log("Redeem Amount (in USDT): ", redeemAmount);
+
+        vUSDT.redeemUnderlying(redeemAmount);
+        console.log("after redeemUnderlying USDT : ", USDT.balanceOf(user2));
+        console.log("after redeemUnderlying vUSDT : ", vUSDT.balanceOf(user2));
+
+        uint expectedUSDTBalance = redeemAmount;
+
+        // https://github.com/VenusProtocol/isolated-pools/blob/develop/contracts/VToken.sol
+        // Line 977 ~ 979 div_ 및 mul_ 연산과정 후 Line 980에서 round up 이 과정에서 1e10 범위의 오차 발생 예상
+        uint tolerance = 1e10 wei;
+        assertApproxEqAbs(USDT.balanceOf(user2), expectedUSDTBalance, tolerance);
+        
+        uint remainingVUSDT = vUSDT.balanceOf(user2);
+        assert(remainingVUSDT > 0);
+        vm.stopPrank();
+
+    }
 }
