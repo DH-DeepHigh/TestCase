@@ -67,8 +67,6 @@ contract CollateralWithdrawTest is Test, TestUtils, Exponential, tools{
         assertEq(Errorcode, 0);
     }
     function test_withdraw_checkLTV() public {
-        address[] memory market = new address[](1);
-        market[0] = address(cEther);
         uint amount = cEther.balanceOf(lender);
 
         //over LTV

@@ -52,5 +52,70 @@ contract CollateralWithdrawTest is Test, VenusUtils, Exponential, tools{
         uint afterAmount = vBNB.balanceOf(address(this));
         assertEq(afterAmount, beforeAmount-calc);
     }
+    function test_withdraw_checkMarket() public{
+        /*
+        withdraw call Sequence redeem/redeemUnderlying => redeemInternal/redeemUnderlying => redeemFresh => redeemAllowed
+        */
+        vm.startPrank(address(Not_registered_vToken));
+        vm.expectRevert("market not listed");
+        comptroller.redeemAllowed(address(Not_registered_vToken),lender,supplyAmount);
+        vm.stopPrank();
+
+        vm.startPrank(address(vDAI));
+        uint Errorcode =comptroller.redeemAllowed(address(vDAI),lender,supplyAmount);
+        vm.stopPrank();
+        // Errorcode =NO.ERROR
+        assertEq(Errorcode, 0);
+    }
+    function test_withdraw_checkLTV() public {
+        uint amount = vBNB.balanceOf(lender);
+
+        //over LTV
+        (,,uint shortfall)=comptroller.getHypotheticalAccountLiquidity(lender,address(vBNB),amount+1,0);
+        console.log(shortfall);
+
+        assertGt(shortfall,0);
+
+        //return Errorcode
+        uint Errorcode = vBNB.redeem(vBNB.balanceOf(lender)+1);
+        //Errorcode =>INSUFFICIENT_SHORTFALL
+        assertEq(Errorcode, 3);
+        
+        //return Errorcode
+        Errorcode = vBNB.redeemUnderlying(supplyAmount + 1e18);
+        //Errorcode =>INSUFFICIENT_SHORTFALL
+        assertEq(Errorcode,3);
+    }
+    function test_withdraw_checkOut() public {
+        assertEq(vBNB.borrowBalanceCurrent(lender),0);
+    
+        vDAI.borrow(1e18);
+        uint Errorcode=comptroller.exitMarket(address(vBNB));
+        //Errorcode => REJECTION 
+        assertEq(Errorcode, 14);
+    }
+    
+    function test_withdraw_checkAccrueBlock() public {
+        vBNB.redeem(vBNB.balanceOf(lender));
+        assertEq(vBNB.accrualBlockNumber(),block.number);
+    }
+    function test_withdraw_checkAmount() public {
+        deal(address(vBNB),lender,10000*1e18);
+
+        uint exchangeRate = vBNB.exchangeRateCurrent();
+        uint totalBalance = address(vBNB).balance;
+        uint calcBalance =totalBalance/(exchangeRate /1e18);
+        
+        //return Errorcode
+        uint Errorcode=vBNB.redeem(calcBalance + 1);
+        //Errorcode => REJECTION
+        assertEq(Errorcode,14);
+        
+        //return Errorcode
+        Errorcode = vBNB.redeemUnderlying(totalBalance+1);
+        //Errorcode => REJECTION
+        assertEq(Errorcode,14);
+    }
+    
     receive() payable external{}
 }

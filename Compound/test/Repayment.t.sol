@@ -9,7 +9,7 @@ import "../src/interfaces/TokenErrorReporter.sol";
 
 contract RepaymentTest is Test, TestUtils, Exponential, tools{
     address borrower = address(this);
-    address user = makeAddr("user");
+    address lender = makeAddr("lender");
     uint borrowAmount = 10000 * 1e18;
     uint supplyAmount = 10* 1e18;
     
@@ -25,8 +25,8 @@ contract RepaymentTest is Test, TestUtils, Exponential, tools{
         dai.approve(address(cDai),type(uint).max);
 
         //------------------------------------------- //
-        deal(address(dai),user,borrowAmount * 2);
-        vm.startPrank(user);
+        deal(address(dai),lender,borrowAmount * 2);
+        vm.startPrank(lender);
         dai.approve(address(cDai),type(uint).max);
         cTokens[0] = address(cDai);
         comptroller.enterMarkets(cTokens);
@@ -34,21 +34,21 @@ contract RepaymentTest is Test, TestUtils, Exponential, tools{
     }
      function test_repay_simpleBehalf() public {
         vm.roll(block.number + 3);
-        uint beforeBalance = dai.balanceOf(user);
+        uint beforeBalance = dai.balanceOf(lender);
         
-        vm.startPrank(user);
+        vm.startPrank(lender);
         uint repayAmount=cDai.borrowBalanceCurrent(borrower);
         //borrowAmount + 3 block interest
         cDai.repayBorrowBehalf(borrower,repayAmount);
         vm.stopPrank();
 
-        uint afterBalance = dai.balanceOf(user);
+        uint afterBalance = dai.balanceOf(lender);
         assertEq(afterBalance,beforeBalance -repayAmount);
     }
     function test_repay_simple() public {
         vm.roll(block.number + 3);
         uint repayAmount=cDai.borrowBalanceCurrent(borrower);
-        deal(address(dai),address(this), repayAmount); 
+        deal(address(dai),borrower, repayAmount); 
 
         cDai.repayBorrow(repayAmount);
         
@@ -94,7 +94,7 @@ contract RepaymentTest is Test, TestUtils, Exponential, tools{
         assertEq(Errorcode,12);
         
         //repay BorrowAmount
-        vm.startPrank(user);
+        vm.startPrank(lender);
         cDai.repayBorrowBehalf(borrower, borrowAmount);
         vm.stopPrank();
         
@@ -108,7 +108,7 @@ contract RepaymentTest is Test, TestUtils, Exponential, tools{
         vm.expectRevert(abi.encodeWithSignature("Panic(uint256)", 0x11));
         cDai.repayBorrow(borrowAmount + 1);
 
-        vm.startPrank(user);
+        vm.startPrank(lender);
         vm.expectRevert(abi.encodeWithSignature("Panic(uint256)", 0x11));
         cDai.repayBorrowBehalf(borrower, borrowAmount+1);
         vm.stopPrank();

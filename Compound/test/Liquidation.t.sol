@@ -8,7 +8,7 @@ import "../src/TestFile.sol";
 import "../src/interfaces/TokenErrorReporter.sol";
 
 contract LiquidationTest is Test, TestUtils, Exponential, tools{
-    address liquidator = address(this);
+    address lender = address(this);
     address borrower = makeAddr("borrower");
     uint borrowAmount = 10000 * 1e18;
     uint supplyAmount = 10* 1e18;
@@ -29,7 +29,7 @@ contract LiquidationTest is Test, TestUtils, Exponential, tools{
         dai.approve(address(cDai),type(uint).max);
         vm.stopPrank();
 
-        deal(address(dai),liquidator,borrowAmount*2);
+        deal(address(dai),lender,borrowAmount*2);
     }
     function test_liquidate_checkMarket() public {
         pass_accrueInterest();

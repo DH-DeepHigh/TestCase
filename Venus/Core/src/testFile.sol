@@ -265,4 +265,11 @@ contract tools is Test, VenusUtils{
         comptroller._setProtocolPaused(false);
         vm.stopPrank();
     }
+    function pass_accrueInterest() public{
+        vm.mockCall(
+            address(Not_registered_vToken),
+            abi.encodeWithSelector(Not_registered_vToken.accrueInterest.selector),
+            abi.encode(0)
+        );
+    }
 }

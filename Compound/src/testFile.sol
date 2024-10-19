@@ -149,7 +149,6 @@ contract testInterestRateModel is InterestRateModel{
 
 contract testCToken is CTokenInterface{
     bool public constant isCToken = true;
-    uint public constant ERROR = 1;
     function balanceOf(address owner) override external view returns (uint256){}
 
     function balanceOfUnderlying(address owner) override external returns (uint256){}
