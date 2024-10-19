@@ -74,11 +74,3 @@ interface IVToken {
 
     function getCash() external view returns (uint256);
 }
-// interface liquidateInterface{
-//     function liquidateBorrow(
-//         address vToken,
-//         address borrower,
-//         uint256 repayAmount,
-//         IVToken vTokenCollateral
-//     ) external payable;
-// }

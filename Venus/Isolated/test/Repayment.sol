@@ -27,7 +27,7 @@ contract CollateralSupply is Test, Tester {
         vm.stopPrank();
     }
 
-    function test_repay() public { //testing...
+    function test_repay() public {
         vm.startPrank(user);
         vUSDT.mint(amount);
 

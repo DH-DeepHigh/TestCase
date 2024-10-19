@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {Tester} from "../src/utils/Tester.sol";
+// import {IComptroller} from "../src/interfaces/IComptroller.sol";
 
 contract CollateralSupply is Test, Tester {
 
@@ -21,44 +22,53 @@ contract CollateralSupply is Test, Tester {
         vm.stopPrank();
 
         vm.startPrank(user2);
-        USDT.approve(address(vUSDD), borrowAmount * 10);
+        USDD.approve(address(vUSDD), borrowAmount * 10);
         vm.stopPrank();
     }
 
-    // function test_liquidate() public { Testing...
-    //     vm.startPrank(user);
-    //     vUSDT.mint(amount);
+    function test_liquidate() public {
+        vm.startPrank(user);
+        vUSDT.mint(amount);
 
-    //     address[] memory vTokens = new address[](1);
-    //     vTokens[0] = address(vUSDT);
-    //     gComptroller.enterMarkets(vTokens);        
+        address[] memory vTokens = new address[](1);
+        vTokens[0] = address(vUSDT);
+        gComptroller.enterMarkets(vTokens);        
 
-    //     address[] memory assetsIn = gComptroller.getAssetsIn(user);
-    //     assertEq(assetsIn[0], address(vUSDT));
+        address[] memory assetsIn = gComptroller.getAssetsIn(user);
+        assertEq(assetsIn[0], address(vUSDT));
 
-        
-    //     vUSDD.borrow(borrowAmount);
+        vUSDD.borrow(borrowAmount);
+        assertEq(USDD.balanceOf(user), borrowAmount);
+        vm.stopPrank();
 
-    //     assertEq(USDD.balanceOf(user), borrowAmount);
-    //     vm.stopPrank();
+        console.log("oracle price before : ", oracle.getUnderlyingPrice(address(vUSDT)));
+        uint newPrice = oracle.getUnderlyingPrice(address(vUSDT)) / 9;
+        vm.mockCall(
+            address(oracle),
+            abi.encodeWithSelector(oracle.getUnderlyingPrice.selector, address(vUSDT)),
+            abi.encode(newPrice) 
+        );
+        console.log("oracle price after : ", oracle.getUnderlyingPrice(address(vUSDT)));
 
-    //     console.log("oracle price before : ", oracle.getUnderlyingPrice(address(vUSDT)));
-    //     uint newPrice = oracle.getUnderlyingPrice(address(vUSDT)) / 10000;
-    //     vm.mockCall(
-    //         address(oracle),
-    //         abi.encodeWithSelector(oracle.getUnderlyingPrice.selector, address(vUSDT)),
-    //         abi.encode(newPrice) 
-    //     );
-    //     console.log("oracle price after : ", oracle.getUnderlyingPrice(address(vUSDT)));
+        vm.startPrank(user2);
+        uint factor = gComptroller.closeFactorMantissa();
+        uint borrowed = vUSDD.borrowBalanceCurrent(user);
+        uint liquidateAmount = (borrowed * factor) / 1e18;
 
-    //     vm.startPrank(user2);
+        // 급락으로 인한 청산 가능가 이하의 경우 comptroller의 healAccount 혹은 liquidateAccount를 이용해야 함.
+        // IComptroller.LiquidationOrder[] memory orders = new IComptroller.LiquidationOrder[](1);
+        // orders[0] = IComptroller.LiquidationOrder({
+        //     vTokenBorrowed: address(vUSDD),
+        //     vTokenCollateral: address(vUSDT),
+        //     repayAmount: liquidateAmount
+        // });
+        // gComptroller.liquidateAccount(user, orders);
 
-    //     vUSDT.liquidateBorrow(user, borrowAmount, vUSDD);
+        vm.expectRevert();
+        vUSDD.liquidateBorrow(user, liquidateAmount + 1, vUSDT);
+        vUSDD.liquidateBorrow(user, liquidateAmount, vUSDT);
 
-    //     uint seizedCollateral = vUSDT.balanceOf(user2);
-    //     console.log("User2 seized collateral: ", seizedCollateral);
-
-    //     vm.stopPrank();
-    // }
+        vm.stopPrank();
+    }
     
 }
