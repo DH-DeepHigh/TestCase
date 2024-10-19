@@ -3,6 +3,33 @@ pragma solidity >= 0.8.0;
 import "../interface/VTokenInterface.sol";
 
 interface ComptrollerInterface {
+    function _setProtocolPaused(bool state) external returns (bool);
+    function borrowCaps(address vToken) external view returns (uint);
+
+    function checkMembership(address account, address vToken) external view returns (bool);
+    /*** Policy Hooks ***/
+    function mintAllowed(address vToken, address minter, uint mintAmount) external returns (uint);
+
+    function redeemAllowed(address vToken, address redeemer, uint redeemTokens) external returns (uint);
+
+    function borrowAllowed(address vToken, address borrower, uint borrowAmount) external returns (uint);
+
+    function repayBorrowAllowed(
+        address vToken,
+        address payer,
+        address borrower,
+        uint repayAmount
+    ) external returns (uint);
+
+    function liquidateBorrowAllowed(
+        address vTokenBorrowed,
+        address vTokenCollateral,
+        address liquidator,
+        address borrower,
+        uint repayAmount
+    ) external returns (uint);
+    
+    
     /*** Assets You Are In ***/
 
     function enterMarkets(address[] calldata vTokens) external returns (uint256[] memory);

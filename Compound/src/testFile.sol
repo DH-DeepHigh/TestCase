@@ -9,7 +9,7 @@ import "./TestUtils.sol";
 contract testComptroller is ComptrollerInterface {
     /// @notice Indicator that this is a Comptroller contract (for inspection)
     bool public constant isComptroller = true;
-
+    function borrowCaps(address vToken) override external view returns (uint){}
     function getAccountLiquidity(address account) external override view returns (uint, uint, uint) {
     }
     function checkMembership(address account, address cToken) external view returns (bool){}

@@ -6,14 +6,14 @@ import "../src/TestUtils.sol";
 import "../src/interfaces/Exponential.sol";
 import "../src/TestFile.sol";
 contract CollateralWithdrawTest is Test, TestUtils, Exponential, tools{
-    address borrower = address(this);
+    address lender = address(this);
     uint supplyAmount = 10 * 1e18;
     
     
     function setUp() public{
         // Fork mainnet at block 20_941_968.
         cheat.createSelectFork("mainnet", BLOCK_NUMBER);
-        vm.deal(borrower,supplyAmount);
+        vm.deal(lender,supplyAmount);
         cEther.mint{value : supplyAmount}();
 
         address[] memory cTokens = new address[](1);
@@ -55,13 +55,13 @@ contract CollateralWithdrawTest is Test, TestUtils, Exponential, tools{
         withdraw call Sequence redeem/redeemUnderlying => redeemInternal/redeemUnderlying => redeemFresh => redeemAllowed
         */
         vm.startPrank(address(Not_registered_cToken));
-        uint Errorcode =comptroller.redeemAllowed(address(Not_registered_cToken),borrower,supplyAmount);
+        uint Errorcode =comptroller.redeemAllowed(address(Not_registered_cToken),lender,supplyAmount);
         vm.stopPrank();
         // Errorcode = MARKET_NOT_LISTED
         assertEq(Errorcode,9);
 
         vm.startPrank(address(cDai));
-        Errorcode =comptroller.redeemAllowed(address(cDai),borrower,supplyAmount);
+        Errorcode =comptroller.redeemAllowed(address(cDai),lender,supplyAmount);
         vm.stopPrank();
         // Errorcode =NO.ERROR
         assertEq(Errorcode, 0);
@@ -69,16 +69,16 @@ contract CollateralWithdrawTest is Test, TestUtils, Exponential, tools{
     function test_withdraw_checkLTV() public {
         address[] memory market = new address[](1);
         market[0] = address(cEther);
-        uint amount = cEther.balanceOf(borrower);
+        uint amount = cEther.balanceOf(lender);
 
         //over LTV
-        (,,uint shortfall)=comptroller.getHypotheticalAccountLiquidity(borrower,address(cEther),amount+1,0);
+        (,,uint shortfall)=comptroller.getHypotheticalAccountLiquidity(lender,address(cEther),amount+1,0);
         console.log(shortfall);
 
         assertGt(shortfall,0);
 
         //return Errorcode
-        uint Errorcode = cEther.redeem(cEther.balanceOf(borrower)+1);
+        uint Errorcode = cEther.redeem(cEther.balanceOf(lender)+1);
         //Errorcode =>INSUFFICIENT_SHORTFALL
         assertEq(Errorcode, 3);
         
@@ -88,7 +88,7 @@ contract CollateralWithdrawTest is Test, TestUtils, Exponential, tools{
         assertEq(Errorcode,3);
     }
     function test_withdraw_checkOut() public {
-        assertEq(cEther.borrowBalanceCurrent(borrower),0);
+        assertEq(cEther.borrowBalanceCurrent(lender),0);
     
         cDai.borrow(1e18);
         uint Errorcode=comptroller.exitMarket(address(cEther));
@@ -96,14 +96,11 @@ contract CollateralWithdrawTest is Test, TestUtils, Exponential, tools{
         assertEq(Errorcode, 14);
     }
     function test_withdraw_checkAccrueBlock() public {
-        cEther.redeem(cEther.balanceOf(borrower));
+        cEther.redeem(cEther.balanceOf(lender));
         assertEq(cEther.accrualBlockNumber(),block.number);
     }
     function test_withdraw_checkAmount() public {
-        deal(address(cEther),borrower,10000*1e18);
-        uint amount = cEther.balanceOf(address(cEther));
-        console.log(cEther.exchangeRateCurrent());
-        console.log(address(cEther).balance);
+        deal(address(cEther),lender,10000*1e18);
 
         uint exchangeRate = cEther.exchangeRateCurrent();
         uint totalBalance = address(cEther).balance;

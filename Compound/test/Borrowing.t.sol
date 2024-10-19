@@ -79,15 +79,15 @@ contract BorrowingTest is Test, TestUtils, Exponential, tools{
     function test_borrow_checkBorrowCap() public {
         deal(address(cEther),borrower,10000 * 1e18);
         uint totalBorrow=cDai.totalBorrowsCurrent();
-        uint borrowCap = 80000000 * 1e18;
+        uint borrowCap = comptroller.borrowCaps(address(cDai));
         uint gap = borrowCap - totalBorrow;
          
         
         vm.expectRevert("market borrow cap reached");
-        cDai.borrow(gap);
+        cDai.borrow(gap + 1);
 
         //borrow limit
-        cDai.borrow(dai.balanceOf(address(cDai))-1);
+        cDai.borrow(dai.balanceOf(address(cDai)));
     }
     function test_borrow_checkLTV() public {
         uint amount = 20000 * 1e18;

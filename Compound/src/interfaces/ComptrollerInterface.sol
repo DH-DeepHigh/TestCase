@@ -13,7 +13,7 @@ interface ComptrollerInterface {
         uint256 borrowAmount
     ) external view returns (uint256, uint256, uint256);
 
-    
+    function borrowCaps(address vToken) external view returns (uint);
     function checkMembership(address account, address cToken) external view returns (bool);
 
     function exitMarket(address) external returns (uint);

@@ -19,21 +19,35 @@ contract CollateralSupplyTest is Test, TestUtils, Exponential, tools{
 
     function test_supplyCErc20_simple() public{
         cDai.mint(supplyAmount);
-        uint totalcDai = cDai.balanceOf(lender);
-        
-        Exp memory exchangeRate = Exp(cDai.exchangeRateCurrent());
-        uint amount = div_(supplyAmount,exchangeRate);
-        assert(totalcDai == amount);
+        address[] memory vTokens = new address[](1);
+        vTokens[0] = address(cDai);
+        comptroller.enterMarkets(vTokens);
 
-        
+        (, uint collateralFactorMantissa,) = comptroller.markets(address(cDai));
+
+        (, uint liquidity,) = comptroller.getAccountLiquidity(lender);
+        liquidity = liquidity / supplyAmount;
+
+        uint price = oracle.getUnderlyingPrice(address(cDai));
+
+        uint expectedLiquidity = (price * collateralFactorMantissa / 1e18) / 1e18;
+        assertEq(liquidity, expectedLiquidity);
     }
     function test_supplyCEther_simple() public{
-        cEther.mint{value: supplyAmount}();
-        uint totalcEther = cEther.balanceOf(lender); 
+        cEther.mint{value : supplyAmount}();
+        address[] memory vTokens = new address[](1);
+        vTokens[0] = address(cEther);
+        comptroller.enterMarkets(vTokens);
 
-        Exp memory exchangeRate = Exp(cEther.exchangeRateCurrent());
-        uint amount = div_(supplyAmount,exchangeRate);
-        assert(totalcEther == amount);
+        (, uint collateralFactorMantissa,) = comptroller.markets(address(cEther));
+
+        (, uint liquidity,) = comptroller.getAccountLiquidity(address(this));
+        liquidity = liquidity / supplyAmount;
+
+        uint price = oracle.getUnderlyingPrice(address(cEther));
+
+        uint expectedLiquidity = (price * collateralFactorMantissa / 1e18) / 1e18;
+        assertEq(liquidity, expectedLiquidity);
     }
     function test_supplyCEther_pause() public{
         set_pause();
@@ -71,5 +85,9 @@ contract CollateralSupplyTest is Test, TestUtils, Exponential, tools{
         vm.stopPrank();
         // Errorcode =NO.ERROR
         assertEq(Errorcode, 0);
+    }
+    function test_supply_checkAccrueBlock() public{
+        cEther.mint{value : supplyAmount}();
+        assertEq(cEther.accrualBlockNumber(),block.number);
     }
 }

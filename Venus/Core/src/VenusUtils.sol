@@ -19,16 +19,15 @@ interface CheatCodes {
 contract VenusUtils is Test {
     CheatCodes cheat = CheatCodes(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
     VTokenInterface vBNB = VTokenInterface(0xA07c5b74C9B40447a954e1466938b865b6BBea36);
-    VTokenInterface vUSDC = VTokenInterface(0xecA88125a5ADbe82614ffC12D0DB554E2e2867C8);
+    VTokenInterface vDAI = VTokenInterface(0x334b3eCB4DCa3593BCCC3c7EBD1A1C1d1780FBF1);
     VTokenInterface vETH = VTokenInterface(0xf508fCD89b8bd15579dc79A6827cB4686A3592c8);
     VaultInterface VAIVault = VaultInterface(0x0667Eed0a0aAb930af74a3dfeDD263A73994f216);
     VaultInterface VRTVault = VaultInterface(0x98bF4786D72AAEF6c714425126Dd92f149e3F334);
     XVSVaultInterface XVSVault = XVSVaultInterface(0x051100480289e704d20e9DB4804837068f3f9204);
-    //TODO add governance, timelock
 
     ComptrollerInterface comptroller = ComptrollerInterface(0xfD36E2c2a6789Db23113685031d7F16329158384);
     
-    IBEP20Interface usdc = IBEP20Interface(0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d);
+    IBEP20Interface dai = IBEP20Interface(0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3);
     IBEP20Interface vai = IBEP20Interface(0x4BD17003473389A42DAF6a0a729f6Fdb328BbBd7);
     IBEP20Interface vrt = IBEP20Interface(0x5F84ce30DC3cF7909101C69086c50De191895883);
     IBEP20Interface xvs = IBEP20Interface(0xcF6BB5389c92Bdda8a3747Ddb454cB7a64626C63);
