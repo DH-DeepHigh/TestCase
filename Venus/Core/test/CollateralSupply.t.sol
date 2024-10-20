@@ -13,7 +13,7 @@ contract CollateralSupplyTest is Test, VenusUtils, Exponential, tools{
     uint supplyAmount = 10 * 1e18;
     
     function setUp() public{
-        // Fork mainnet at block 20_941_968.
+        // Fork mainnet at block 43_056_300.
         cheat.createSelectFork("bsc_mainnet", BLOCK_NUMBER);
         vm.deal(lender,supplyAmount);
         deal(address(dai),lender,supplyAmount);
@@ -55,7 +55,7 @@ contract CollateralSupplyTest is Test, VenusUtils, Exponential, tools{
         assertEq(liquidity, expectedLiquidity);
     }
 
-    function test_supply_cehckPause() public{
+    function test_supply_checkPause() public{
         Pause();
         vm.expectRevert("protocol is paused");
         vBNB.mint{value : supplyAmount}();

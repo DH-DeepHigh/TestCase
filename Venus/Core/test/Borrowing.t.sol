@@ -71,8 +71,6 @@ contract BorrowingTest is Test, VenusUtils, Exponential, tools{
         deal(address(vBNB), borrower, 100000 * 1e18);
         uint totalBorrow = vDAI.totalBorrowsCurrent();
         uint borrowCap = comptroller.borrowCaps(address(vDAI));
-        console.log(borrowCap);
-        console.log(totalBorrow);
 
         require(borrowCap >= totalBorrow, "borrowCap is less than totalBorrow");
 

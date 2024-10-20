@@ -13,7 +13,7 @@ contract CollateralWithdrawTest is Test, VenusUtils, Exponential, tools{
     uint supplyAmount = 10 * 1e18;
     
     function setUp() public{
-        // Fork mainnet at block 20_941_968.
+        // Fork mainnet at block 43_056_300.
         cheat.createSelectFork("bsc_mainnet", BLOCK_NUMBER);    
         vm.deal(lender,supplyAmount);
         vBNB.mint{value : supplyAmount}();
@@ -54,7 +54,7 @@ contract CollateralWithdrawTest is Test, VenusUtils, Exponential, tools{
     }
     function test_withdraw_checkMarket() public{
         /*
-        withdraw call Sequence redeem/redeemUnderlying => redeemInternal/redeemUnderlying => redeemFresh => redeemAllowed
+        withdraw call Sequence redeem/redeemUnderlying => redeemInternal/redeemUnderlyingInternal => redeemFresh => redeemAllowed
         */
         vm.startPrank(address(Not_registered_vToken));
         vm.expectRevert("market not listed");
@@ -72,7 +72,6 @@ contract CollateralWithdrawTest is Test, VenusUtils, Exponential, tools{
 
         //over LTV
         (,,uint shortfall)=comptroller.getHypotheticalAccountLiquidity(lender,address(vBNB),amount+1,0);
-        console.log(shortfall);
 
         assertGt(shortfall,0);
 

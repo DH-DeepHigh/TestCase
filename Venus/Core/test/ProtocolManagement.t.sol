@@ -10,7 +10,7 @@ contract ProtocolManagementTest is Test, VenusUtils {
     address pauseGuardian;
 
     function setUp() public {
-        // Fork mainnet at block 20_941_968.
+        // Fork mainnet at block 43_056_300.
         cheat.createSelectFork("bsc_mainnet", BLOCK_NUMBER);
         pauseGuardian = comptroller.pauseGuardian();
     }
