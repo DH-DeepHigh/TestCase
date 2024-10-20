@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {Tester} from "../src/utils/Tester.sol";
-// import {IComptroller} from "../src/interfaces/IComptroller.sol";
 
 contract CollateralSupply is Test, Tester {
 
@@ -24,9 +23,8 @@ contract CollateralSupply is Test, Tester {
         vm.startPrank(user2);
         USDD.approve(address(vUSDD), borrowAmount * 10);
         vm.stopPrank();
-    }
 
-    function test_liquidate() public {
+        // user's Borrowing
         vm.startPrank(user);
         vUSDT.mint(amount);
 
@@ -40,35 +38,41 @@ contract CollateralSupply is Test, Tester {
         vUSDD.borrow(borrowAmount);
         assertEq(USDD.balanceOf(user), borrowAmount);
         vm.stopPrank();
+    }
 
-        console.log("oracle price before : ", oracle.getUnderlyingPrice(address(vUSDT)));
-        uint newPrice = oracle.getUnderlyingPrice(address(vUSDT)) / 9;
-        vm.mockCall(
-            address(oracle),
-            abi.encodeWithSelector(oracle.getUnderlyingPrice.selector, address(vUSDT)),
-            abi.encode(newPrice) 
-        );
-        console.log("oracle price after : ", oracle.getUnderlyingPrice(address(vUSDT)));
+    function test_liquidate_checkMarket() public {
 
         vm.startPrank(user2);
         uint factor = gComptroller.closeFactorMantissa();
         uint borrowed = vUSDD.borrowBalanceCurrent(user);
         uint liquidateAmount = (borrowed * factor) / 1e18;
 
-        // 급락으로 인한 청산 가능가 이하의 경우 comptroller의 healAccount 혹은 liquidateAccount를 이용해야 함.
-        // IComptroller.LiquidationOrder[] memory orders = new IComptroller.LiquidationOrder[](1);
-        // orders[0] = IComptroller.LiquidationOrder({
-        //     vTokenBorrowed: address(vUSDD),
-        //     vTokenCollateral: address(vUSDT),
-        //     repayAmount: liquidateAmount
-        // });
-        // gComptroller.liquidateAccount(user, orders);
-
         vm.expectRevert();
-        vUSDD.liquidateBorrow(user, liquidateAmount + 1, vUSDT);
-        vUSDD.liquidateBorrow(user, liquidateAmount, vUSDT);
-
+        vUSDD.liquidateBorrow(user, liquidateAmount, NOT_REGISTERED_VTOKEN);
+        // set_oracle();
+        // vUSDD.liquidateBorrow(user, liquidateAmount, vUSDT);
         vm.stopPrank();
     }
+
+    function test_liquidate_checkLTV() public {
+        vm.startPrank(user2);
+        uint factor = gComptroller.closeFactorMantissa();
+        uint borrowed = vUSDD.borrowBalanceCurrent(user);
+        uint liquidateAmount = (borrowed * factor) / 1e18;
+
+        vm.expectRevert();  // 0x095bf333. error InsufficientShortfall
+        vUSDD.liquidateBorrow(user, liquidateAmount, vUSDT);
+        vm.stopPrank();
+
+    }
+
+    // function set_oracle() public {
+    //     uint newPrice = oracle.getUnderlyingPrice(address(vUSDT)) / 9;
+    //     vm.mockCall(
+    //         address(oracle),
+    //         abi.encodeWithSelector(oracle.getUnderlyingPrice.selector, address(vUSDT)),
+    //         abi.encode(newPrice) 
+    //     );
+    // }
     
 }

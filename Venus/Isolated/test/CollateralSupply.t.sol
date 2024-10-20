@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {Tester} from "../src/utils/Tester.sol";
+import {Action} from "../src/interfaces/IComptroller.sol";
 
 contract CollateralSupply is Test, Tester {
 
@@ -24,7 +25,7 @@ contract CollateralSupply is Test, Tester {
         vm.stopPrank();
     }
 
-    function test_mint() public {
+    function test_supply_simple() public {
         vm.startPrank(user);
         vETH.mint(amount);
 
@@ -38,7 +39,7 @@ contract CollateralSupply is Test, Tester {
         vm.stopPrank();
     }
 
-    function test_mintBehalf() public {
+    function test_supply_simple2() public {
         vm.startPrank(user);
         vETH.mintBehalf(user2, amount);
         vm.stopPrank();
@@ -52,5 +53,52 @@ contract CollateralSupply is Test, Tester {
         uint expectedLiquidity = (price * amount * collateralFactorMantissa) / 1e18 / 1e18;
         assertEq(liquidity, expectedLiquidity);
         vm.stopPrank();
+    }
+
+    function test_supply_checkPause() public {
+
+        Pause(address(comptroller), address(vETH));
+        assertEq(isPaused(address(comptroller), address(vETH), Action.MINT), true);
+        unPause(address(comptroller), address(vETH));
+        assertEq(isPaused(address(comptroller), address(vETH), Action.MINT), false);
+
+        // Simulation
+        Pause(address(comptroller), address(vETH));
+
+        vm.startPrank(user);
+        vm.expectRevert();
+        vETH.mint(amount);
+        vm.stopPrank();
+
+        unPause(address(comptroller), address(vETH));
+
+        vm.startPrank(user);
+        vETH.mint(amount);
+        (, uint collateralFactorMantissa) = comptroller.markets(address(vETH));
+        (, uint liquidity,) = comptroller.getAccountLiquidity(user);
+        liquidity = liquidity / 1e18;
+
+        uint price = oracle.getUnderlyingPrice(address(vETH));
+        uint expectedLiquidity = (price * amount * collateralFactorMantissa) / 1e18 / 1e18;
+        assertEq(liquidity, expectedLiquidity);
+        vm.stopPrank(); 
+    }
+
+    function test_supply_checkMarket() public {
+
+        vm.startPrank(admin);
+        assertEq(comptroller.isMarketListed(address(NOT_REGISTERED_VTOKEN)), false);
+
+        vm.expectRevert(); // 0xb5343d72. error MarketNotListed
+        comptroller.unlistMarket(address(NOT_REGISTERED_VTOKEN));
+
+        assertEq(comptroller.isMarketListed(address(vETH)), true);
+        vm.stopPrank();
+    }
+
+    function test_supply_checkAccrueBlock() public {
+        vm.startPrank(user);
+        vETH.mint(amount);
+        assertEq(vETH.accrualBlockNumber(), block.number);
     }
 }
