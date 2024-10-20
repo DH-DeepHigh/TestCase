@@ -27,6 +27,8 @@ pragma solidity ^0.8.25;
         uint repayAmount;
     }
 
+    function oracle() external view returns (address);
+
     // Iso
     function setActionsPaused(address[] calldata marketsList, Action[] calldata actionsList, bool paused) external;
 
@@ -35,6 +37,12 @@ pragma solidity ^0.8.25;
     function isMarketListed(address vToken) external view returns (bool);
 
     function actionPaused(address market, Action action) external view returns (bool);
+
+    function setPriceOracle(address newOracle) external;
+
+    function setCloseFactor(uint256 newCloseFactorMantissa) external;
+
+    function setLiquidationIncentive(uint256 newLiquidationIncentiveMantissa) external;
 
     /*** Assets You Are In ***/
 
