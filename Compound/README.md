@@ -27,31 +27,5 @@ forge test --match-path test/name-of-the-file -vv
 ```
 ## 테스트케이스 작성 내용
 
-### 1. Compound
-
-|상태|내용|
-|--|------|
-|완료|기본적인 기능 테스트|
-|완료|admin 기능 테스트|
-|시작 전|추가적인 테스트|
-
-Location: test/cEther.t.sol 
-  
-Location: test/cErc20.t.sol 
-
-Location: test/governance.t.sol 
-
-Location: test/admin_CToken.t.sol
-
-Location: test/admin_Comptroller.t.sol
-
-Location: test/admin_Unitroller.t.sol
-
-Location: test/guardian.t.sol
-
-Location: test/claimComp.t.sol 
-
-- 현재 compound v2 마켓에서 보상을 지급하지 않아서 따로 compspeed 값 설정 후 진행하였음
-
-
+### Compound
 

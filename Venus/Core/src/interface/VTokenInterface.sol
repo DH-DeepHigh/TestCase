@@ -1,8 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >= 0.8.0;
-
+import "./ComptrollerInterface.sol";
+import "./IBEP20Interface.sol";
 interface VTokenInterface{
     function accrualBlockNumber() external view returns (uint);
+    function admin() external  returns (address payable);
+    
+    function pendingAdmin() external  returns (address payable);
+
+    function comptroller() external  returns (address);
+    
+    function reserveFactorMantissa() external returns (uint);
+    
+    function interestRateModel() external  returns (address);
+    
     function balanceOf(address owner) external view returns (uint256);
 
     function mint() external payable;
@@ -68,8 +79,37 @@ interface VTokenInterface{
     function badDebt() external  returns (uint256);
 
     function getCash() external view returns (uint256);
+    //admin function
+    function _setPendingAdmin(address payable newPendingAdmin)  external returns (uint);
+    
+    function _acceptAdmin()  external returns (uint);
+    
+    function _setComptroller(ComptrollerInterface newComptroller)  external returns (uint);
+    
+    function _setReserveFactor(uint newReserveFactorMantissa)  external returns (uint);
+    
+    function _reduceReserves(uint reduceAmount)  external returns (uint);
+
+    function reduceReserves(uint reduceAmount)  external;
+    
+    function _setInterestRateModel(InterestRateModel newInterestRateModel)  external returns (uint);
+
+    function implementation() external returns(address);
+    
+    //only cErc20delegate
+    function _resignImplementation() external;
+    function _becomeImplementation(bytes memory data)  external;
+    
+    //only cErc20delegator
+    function _setImplementation(address implementation_, bool allowResign, bytes memory becomeImplementationData)  external;
 }
-interface liquidateInterface{
+abstract contract InterestRateModel {
+    bool public constant isInterestRateModel = true;
+
+    function getBorrowRate(uint cash, uint borrows, uint reserves) virtual external view returns (uint);
+    function getSupplyRate(uint cash, uint borrows, uint reserves, uint reserveFactorMantissa) virtual external view returns (uint);
+
+}interface liquidateInterface{
         function liquidateBorrow(
         address vToken,
         address borrower,
