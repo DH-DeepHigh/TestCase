@@ -8,6 +8,7 @@ import {VTokenInterface,liquidateInterface} from "./interface/VTokenInterface.so
 import {IBEP20Interface} from "./interface/IBEP20Interface.sol";
 import {OracleInterface,ResilientOracleInterface,BoundValidatorInterface} from "./interface/OracleInterface.sol";
 import "./interface/VaultInterface.sol";
+import "./interface/UnitrollerInterface.sol";
 
 interface CheatCodes {
     function createFork(string calldata, uint256) external returns (uint256);
@@ -26,6 +27,7 @@ contract VenusUtils is Test {
     XVSVaultInterface XVSVault = XVSVaultInterface(0x051100480289e704d20e9DB4804837068f3f9204);
 
     ComptrollerInterface comptroller = ComptrollerInterface(0xfD36E2c2a6789Db23113685031d7F16329158384);
+    UnitrollerInterface unitroller = UnitrollerInterface(0xfD36E2c2a6789Db23113685031d7F16329158384);
     
     IBEP20Interface dai = IBEP20Interface(0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3);
     IBEP20Interface vai = IBEP20Interface(0x4BD17003473389A42DAF6a0a729f6Fdb328BbBd7);
@@ -37,8 +39,9 @@ contract VenusUtils is Test {
     IBEP20Interface eth = IBEP20Interface(0x2170Ed0880ac9A755fd29B2688956BD959F933F8);
     ResilientOracleInterface oracle = ResilientOracleInterface(0x6592b5DE802159F3E74B2486b091D11a8256ab8A);
     liquidateInterface liquidator = liquidateInterface(0x0870793286aaDA55D39CE7f82fb2766e8004cF43);
-
+    address master = 0x9A7890534d9d91d473F28cB97962d176e2B65f1d;
     address admin = 0x939bD8d64c0A9583A7Dcea9933f7b21697ab6396;
+    address proxy =0xCa01D5A9A248a830E9D93231e791B1afFed7c446;
 
     uint256 public constant BLOCK_NUMBER = 43_056_300;
 }

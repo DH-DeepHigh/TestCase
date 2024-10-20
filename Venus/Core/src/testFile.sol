@@ -9,6 +9,8 @@ import "./VenusUtils.sol";
 contract testComptroller is ComptrollerInterface {
     /// @notice Indicator that this is a Comptroller contract (for inspection)
     bool public constant isComptroller = true;
+    function borrowCapGuardian() override external view returns (address){}
+    function pauseGuardian() override external view returns (address){}
     function _setProtocolPaused(bool state) override external returns (bool){}
     function borrowCaps(address vToken) override external view returns (uint){}
     function checkMembership(address account, address vToken) override external view returns (bool){}
@@ -165,14 +167,40 @@ contract testComptroller is ComptrollerInterface {
      function mintedVAIs(address user) override external view returns (uint){}
 
      function vaiMintRate() override external view returns (uint){}
+     //admin function
+          function _setPriceOracle(address newOracle) override external returns (uint){}
+
+    function _setCloseFactor(uint newCloseFactorMantissa) override external returns (uint){}
+
+    function _setCollateralFactor(VTokenInterface cToken, uint newCollateralFactorMantissa) override external returns (uint){}
+
+    function _setLiquidationIncentive(uint newLiquidationIncentiveMantissa) override external returns (uint){}
+
+    function _supportMarket(VTokenInterface cToken) override external returns (uint){}
+
+    function _setBorrowCapGuardian(address newBorrowCapGuardian) override external{}
+
+    function _setPauseGuardian(address newPauseGuardian) override external returns (uint){}
+
+    function _setMintPaused(VTokenInterface cToken, bool state) override external returns (bool){}
+
+    function _setBorrowPaused(VTokenInterface cToken, bool state) override external returns (bool){}
+
+    function _setTransferPaused(bool state) override external returns (bool){}
+
+    function _setSeizePaused(bool state) override external returns (bool){}
+
+    function _grantComp(address recipient, uint amount) override external{}
+
+    function _setCompSpeeds(VTokenInterface[] memory cTokens, uint[] memory supplySpeeds, uint[] memory borrowSpeeds) override external{}
+
+    function _setContributorCompSpeed(address contributor, uint compSpeed) override external{}
+
+    function _become(address unitroller) override external{}
+
+    function _setMarketBorrowCaps(VTokenInterface[] calldata cTokens, uint[] calldata newBorrowCaps) override external{}
 }
 
-abstract contract InterestRateModel {
-    bool public constant isInterestRateModel = true;
-
-    function getBorrowRate(uint cash, uint borrows, uint reserves) virtual external view returns (uint);
-    function getSupplyRate(uint cash, uint borrows, uint reserves, uint reserveFactorMantissa) virtual external view returns (uint);
-}
 
 contract testInterestRateModel is InterestRateModel{
     function getBorrowRate(uint cash, uint borrows, uint reserves) override external view returns (uint){}
@@ -180,8 +208,18 @@ contract testInterestRateModel is InterestRateModel{
 
 }
 
-contract testCToken is VTokenInterface{
-    bool public constant isCToken = true;
+contract testToken is VTokenInterface{
+    bool public constant isVToken = true;
+    function reduceReserves(uint reduceAmount)  override external{}
+    function pendingAdmin() override external  returns (address payable){}
+    function admin() override external  returns (address payable){}
+
+    function interestRateModel() override external  returns (address){}
+
+    function comptroller() override external  returns (address){}
+
+    function reserveFactorMantissa() override external returns (uint){}
+    
     function accrualBlockNumber() override external view returns (uint){}
     function balanceOf(address owner) override external view returns (uint256){}
 
@@ -248,12 +286,34 @@ contract testCToken is VTokenInterface{
     function badDebt() override external  returns (uint256){}
 
     function getCash() override external view returns (uint256){}
+
+    //admin function
+    function _setPendingAdmin(address payable newPendingAdmin)  override external returns (uint){}
+    
+    function _acceptAdmin()  override external returns (uint){}
+    
+    function _setComptroller(ComptrollerInterface newComptroller)  override external returns (uint){}
+    
+    function _setReserveFactor(uint newReserveFactorMantissa)  override external returns (uint){}
+    
+    function _reduceReserves(uint reduceAmount)  override external returns (uint){}
+    
+    function _setInterestRateModel(InterestRateModel newInterestRateModel)  override external returns (uint){}
+
+    function implementation() override external returns(address){}
+    
+    //only cErc20delegate
+    function _resignImplementation() override external{}
+    function _becomeImplementation(bytes memory data)  override external{}
+    
+    //only cErc20delegator
+    function _setImplementation(address implementation_, bool allowResign, bytes memory becomeImplementationData)  override external{}
    
 }
 
 contract tools is Test, VenusUtils{
     using stdStorage for StdStorage;
-    testCToken deploy = new testCToken();
+    testToken deploy = new testToken();
     VTokenInterface Not_registered_vToken= VTokenInterface(deploy);
     function Pause() public {
         vm.startPrank(admin);

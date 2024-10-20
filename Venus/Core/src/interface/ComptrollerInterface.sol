@@ -163,6 +163,43 @@ interface ComptrollerInterface {
     function mintedVAIs(address user) external view returns (uint);
 
     function vaiMintRate() external view returns (uint);
+
+    //admin function
+     function _setPriceOracle(address newOracle) external returns (uint);
+
+    function _setCloseFactor(uint newCloseFactorMantissa) external returns (uint);
+
+    function _setCollateralFactor(VTokenInterface cToken, uint newCollateralFactorMantissa) external returns (uint);
+
+    function _setLiquidationIncentive(uint newLiquidationIncentiveMantissa) external returns (uint);
+
+    function _supportMarket(VTokenInterface cToken) external returns (uint);
+
+    function _setBorrowCapGuardian(address newBorrowCapGuardian) external;
+
+    function _setPauseGuardian(address newPauseGuardian) external returns (uint);
+
+    function _setMintPaused(VTokenInterface cToken, bool state) external returns (bool);
+
+    function _setBorrowPaused(VTokenInterface cToken, bool state) external returns (bool);
+
+    function _setTransferPaused(bool state) external returns (bool);
+
+    function _setSeizePaused(bool state) external returns (bool);
+
+    function _grantComp(address recipient, uint amount) external;
+
+    function _setCompSpeeds(VTokenInterface[] memory cTokens, uint[] memory supplySpeeds, uint[] memory borrowSpeeds) external;
+
+    function _setContributorCompSpeed(address contributor, uint compSpeed) external;
+
+    function _become(address unitroller) external;
+
+    function _setMarketBorrowCaps(VTokenInterface[] calldata cTokens, uint[] calldata newBorrowCaps) external;
+
+    function pauseGuardian() external view returns (address);
+    function borrowCapGuardian() external view returns (address);
+
 }
 
 interface IVAIVault {
@@ -176,4 +213,13 @@ interface IComptroller {
     function treasuryAddress() external view returns (address);
 
     function treasuryPercent() external view returns (uint);
+}
+
+interface IAccess {
+    function giveCallPermission(
+        address contractAddress,
+        string memory functionSig,
+        address accountToPermit
+    ) external;
+
 }
