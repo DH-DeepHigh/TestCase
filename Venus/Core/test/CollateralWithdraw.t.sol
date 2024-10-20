@@ -54,7 +54,7 @@ contract CollateralWithdrawTest is Test, VenusUtils, Exponential, tools{
     }
     function test_withdraw_checkMarket() public{
         /*
-        withdraw call Sequence redeem/redeemUnderlying => redeemInternal/redeemUnderlying => redeemFresh => redeemAllowed
+        withdraw call Sequence redeem/redeemUnderlying => redeemInternal/redeemUnderlyingInternal => redeemFresh => redeemAllowed
         */
         vm.startPrank(address(Not_registered_vToken));
         vm.expectRevert("market not listed");
