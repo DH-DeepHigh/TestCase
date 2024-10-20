@@ -7,6 +7,18 @@ pragma solidity ^0.8.25;
  * @notice Interface implemented by the `Comptroller` contract.
  */
 
+ enum Action {
+    MINT,
+    REDEEM,
+    BORROW,
+    REPAY,
+    SEIZE,
+    LIQUIDATE,
+    TRANSFER,
+    ENTER_MARKET,
+    EXIT_MARKET
+}
+
  interface IComptroller {
 
     struct LiquidationOrder {
@@ -15,6 +27,15 @@ pragma solidity ^0.8.25;
         uint repayAmount;
     }
 
+    // Iso
+    function setActionsPaused(address[] calldata marketsList, Action[] calldata actionsList, bool paused) external;
+
+    function unlistMarket(address market) external returns (uint256);
+
+    function isMarketListed(address vToken) external view returns (bool);
+
+    function actionPaused(address market, Action action) external view returns (bool);
+
     /*** Assets You Are In ***/
 
     function enterMarkets(address[] calldata vTokens) external returns (uint256[] memory);
@@ -22,6 +43,11 @@ pragma solidity ^0.8.25;
     function exitMarket(address vToken) external returns (uint256);
 
     /*** Policy Hooks ***/
+
+    function checkMembership(address account, address vToken) external view returns (bool);
+
+    function borrowCaps(address vToken) external view returns (uint);
+    function supplyCaps(address vToken) external view returns (uint);
 
     function preMintHook(address vToken, address minter, uint256 mintAmount) external;
 
@@ -107,10 +133,12 @@ pragma solidity ^0.8.25;
     function getAccountLiquidity(address account) external view returns (uint256, uint256, uint256);
 
     function updateDelegate(address delegate, bool approved) external;
+
     function getHypotheticalAccountLiquidity(
         address account,
         address vTokenModify,
         uint256 redeemTokens,
         uint256 borrowAmount
     ) external view returns (uint256, uint256, uint256);
+
 }
