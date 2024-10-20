@@ -23,22 +23,14 @@ contract CollateralSupply is EVaultTestBase {
 
         lender = makeAddr("lender");
 
-        vm.label(address(WETH), "WETH");
-        vm.label(address(eWETH), "eWETH");
-        vm.label(address(DAI), "DAI");
-        vm.label(address(eDAI), "eDAI");
-
         // lender
-        deal(address(WETH), lender, type(uint256).max);
-        deal(address(DAI), lender, type(uint256).max);
-        
         startHoax(lender);
+        deal(address(WETH), lender, type(uint256).max);
         WETH.approve(address(eWETH), type(uint256).max);
-        DAI.approve(address(eDAI), type(uint256).max);
     }
 
     function test_simple_deposit() public {
-        uint256 amount = 1e18;
+        uint256 amount = 10 * 1e18;
 
         uint256 vaultAssetBalanceBefore = WETH.balanceOf(address(eWETH));
         uint256 totalSupplyBefore = eWETH.totalSupply();
