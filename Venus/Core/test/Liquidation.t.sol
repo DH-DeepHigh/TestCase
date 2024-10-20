@@ -14,6 +14,7 @@ contract LiquidationTest is Test, VenusUtils, Exponential, tools{
     uint supplyAmount = 10 * 1e18;
 
     function setUp() public{
+        // Fork mainnet at block 43_056_300.
         cheat.createSelectFork("bsc_mainnet", BLOCK_NUMBER);
         vm.deal(borrower, supplyAmount);
         

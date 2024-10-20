@@ -32,7 +32,7 @@ contract RepaymentTest is Test, VenusUtils, Exponential, tools{
         comptroller.enterMarkets(vToken);
         vm.stopPrank();
     }
-         function test_repay_simpleBehalf() public {
+         function test_repay_simple() public {
         vm.roll(block.number + 3);
         uint beforeBalance = dai.balanceOf(lender);
         
@@ -45,7 +45,7 @@ contract RepaymentTest is Test, VenusUtils, Exponential, tools{
         uint afterBalance = dai.balanceOf(lender);
         assertEq(afterBalance,beforeBalance -repayAmount);
     }
-    function test_repay_simple() public {
+    function test_repay_simple2() public {
         vm.roll(block.number + 3);
         uint repayAmount=vDAI.borrowBalanceCurrent(borrower);
         deal(address(dai),borrower, repayAmount); 
