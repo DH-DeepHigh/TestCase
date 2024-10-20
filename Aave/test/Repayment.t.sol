@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.26;
 
-import {Test, console} from "forge-std/Test.sol";
+import "../lib/forge-std/src/Test.sol";
 import {IERC20} from '../src/dependencies/openzeppelin/contracts/IERC20.sol';
 import "../src/interfaces/IPool.sol";
 import "../src/interfaces/IPoolAddressesProvider.sol";
