@@ -30,6 +30,9 @@ contract CollateralSupply is Test, Tester {
         address[] memory assetsIn = gComptroller.getAssetsIn(repayer);
         assertEq(assetsIn[0], address(vUSDT));
 
+        vUSDD.borrow(borrowAmount);
+        assertEq(USDD.balanceOf(repayer), borrowAmount);
+
         vm.stopPrank();
 
         vm.startPrank(repayer2);
@@ -48,9 +51,6 @@ contract CollateralSupply is Test, Tester {
     function test_repay_checkAccrueBlock() public {
         vm.startPrank(repayer);
 
-        vUSDD.borrow(borrowAmount);
-        assertEq(USDD.balanceOf(repayer), borrowAmount);
-
         vUSDD.repayBorrow(borrowAmount);
         assertEq(USDD.balanceOf(repayer), 0);
         assertEq(vUSDT.accrualBlockNumber(), block.number);
@@ -58,12 +58,10 @@ contract CollateralSupply is Test, Tester {
 
     function test_repay_checkOut() public {
         vm.startPrank(repayer);
-
-        vUSDD.borrow(1);
         vm.expectRevert();  // 0xbb55fd27. error InsufficientLiquidity
         gComptroller.exitMarket(address(vUSDT));
 
-        vUSDD.repayBorrow(1);
+        vUSDD.repayBorrow(borrowAmount);
         gComptroller.exitMarket(address(vUSDT));
         vm.stopPrank();
     }
@@ -71,50 +69,45 @@ contract CollateralSupply is Test, Tester {
     function test_repay_checkOutBehalf() public {
         vm.startPrank(repayer);
 
-        vUSDD.borrow(1);
         vm.expectRevert();  // 0xbb55fd27. error InsufficientLiquidity
         gComptroller.exitMarket(address(vUSDT));
+
         vm.stopPrank();
 
         vm.startPrank(repayer2);
+
         USDD.approve(address(vUSDD), amount);
         vUSDD.repayBorrowBehalf(repayer, borrowAmount);
         vm.stopPrank();
 
         vm.startPrank(repayer);
         gComptroller.exitMarket(address(vUSDT));
+        
         vm.stopPrank();
     }
 
     function test_repay_checkAmount() public {
         vm.startPrank(repayer);
-        vUSDD.borrow(borrowAmount);
 
         // Core Pool과 달리 Isolated Pool에서 상환금액이 차입금액보다 클 경우, 차입금액만 송금되어 Revert가 발생하지 않음.
         vUSDD.repayBorrow(borrowAmount * 99999);
         vUSDD.repayBorrow(borrowAmount);
+
         vm.stopPrank();
     }
 
     function test_repay_simple() public {
         vm.startPrank(repayer);
 
-        vUSDD.borrow(borrowAmount);
-        assertEq(USDD.balanceOf(repayer), borrowAmount);
-
         vUSDD.repayBorrow(borrowAmount);
         assertEq(USDD.balanceOf(repayer), 0);
+
         vm.stopPrank();
     }
 
     function test_repay_simpleBehalf() public {
-        vm.startPrank(repayer);
-
-        vUSDD.borrow(borrowAmount);
-        assertEq(USDD.balanceOf(repayer), borrowAmount);
-        vm.stopPrank();
-
         vm.startPrank(repayer2);
+
         USDD.approve(address(vUSDD), amount);
         vUSDD.repayBorrowBehalf(repayer, borrowAmount);
         assertEq(USDD.balanceOf(repayer2), 0);
