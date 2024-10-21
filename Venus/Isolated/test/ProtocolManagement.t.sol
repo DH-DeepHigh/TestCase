@@ -34,31 +34,9 @@ contract CollateralSupply is Test, Tester {
         uint reserves = vUSDT.totalReserves();
         
         vm.expectRevert();
-        // vUSDT.reduceReserves(reserves + 1);
-
-        vUSDT.reduceReserves(reserves);
-    }
-
-    function test_setPause() public {
-        vm.startPrank(user);
-
-        address[] memory marketsList = new address[](1);
-        marketsList[0] = address(vETH);
-
-        Action[] memory actionsList = new Action[](5);
-        actionsList[0] = Action.MINT;
-        actionsList[1] = Action.REDEEM;
-        actionsList[2] = Action.BORROW;
-        actionsList[3] = Action.REPAY;
-        actionsList[4] = Action.LIQUIDATE;
-
-        vm.expectRevert();
-        comptroller.setActionsPaused(marketsList, actionsList, true);
-        vm.stopPrank();
-
-        Pause(address(comptroller), address(vETH));
-        bool success = isPaused(address(comptroller), address(vETH), Action.MINT);
-        assertEq(success, true);
+        vUSDT.reduceReserves(reserves + 3.156944 * 1e18);
+        reserves = vUSDT.totalReserves();
+        vUSDT.reduceReserves(reserves + 3.156943 * 1e18);
     }
 
     function test_setCloseFactor() public {
@@ -89,6 +67,78 @@ contract CollateralSupply is Test, Tester {
         vm.stopPrank();
 
     }
+
+    function test_setPause() public {
+        vm.startPrank(user);
+
+        address[] memory marketsList = new address[](1);
+        marketsList[0] = address(vETH);
+
+        Action[] memory actionsList = new Action[](5);
+        actionsList[0] = Action.MINT;
+        actionsList[1] = Action.REDEEM;
+        actionsList[2] = Action.BORROW;
+        actionsList[3] = Action.REPAY;
+        actionsList[4] = Action.LIQUIDATE;
+
+        vm.expectRevert();
+        comptroller.setActionsPaused(marketsList, actionsList, true);
+        vm.stopPrank();
+
+        Pause(address(comptroller), address(vETH));
+        bool success = isPaused(address(comptroller), address(vETH), Action.MINT);
+        assertEq(success, true);
+    }
+
+    function test_admin_checkDoubleInitialize() public {
+        vm.startPrank(admin);
+
+        address underlying = address(0x123);
+        address comptroller = address(0x456);
+        address interestRateModel = address(0x789);
+        uint256 initialExchangeRateMantissa = 1e18;
+        string memory name = "Test Token";
+        string memory symbol = "TTK";
+        uint8 decimals = 18;
+        address accessControlManager = address(0xABC);
+        address riskManagement = address(0xDEF);
+        uint256 reserveFactorMantissa = 0.1e18;
+
+        vm.expectRevert();
+        vUSDT.initialize(
+            underlying,
+            comptroller,
+            interestRateModel,
+            initialExchangeRateMantissa,
+            name,
+            symbol,
+            decimals,
+            admin,
+            accessControlManager,
+            riskManagement,
+            reserveFactorMantissa
+        );
+
+        NOT_REGISTERED_VTOKEN.initialize(
+            underlying,
+            comptroller,
+            interestRateModel,
+            initialExchangeRateMantissa,
+            name,
+            symbol,
+            decimals,
+            admin,
+            accessControlManager,
+            riskManagement,
+            reserveFactorMantissa
+        );
+
+        
+        vm.stopPrank();
+    }
+
+
+
     
     
 }

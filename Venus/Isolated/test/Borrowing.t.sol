@@ -106,18 +106,16 @@ contract CollateralSupply is Test, Tester {
         assertEq(vUSDT.accrualBlockNumber(), block.number);
     }
 
-    function test_borrow_checkAmount() public {
+    function testFail_borrow_checkAmount() public {
         vm.startPrank(borrower);
         deal(address(vUSDT), borrower, 1000000000000000 * 1e18);
 
         uint totalReserve = vUSDD.totalReserves();
         console.log("totalReserve : ", totalReserve);
 
-        // vm.expectRevert();
+        vm.expectRevert();
         // _getCashPrior() - totalReserves < borrowAmount   
-        // vUSDD.borrow(USDD.balanceOf(address(vUSDD)) - totalReserve); // 재확인 필요
-        // vUSDD.borrow(USDD.balanceOf(address(vUSDD)) - totalReserve - 1e18);
-        // assertEq(USDD.balanceOf(borrower), USDD.balanceOf(address(vUSDD)) - totalReserve - 1e18);
+        vUSDD.borrow(USDD.balanceOf(address(vUSDD)) - totalReserve);
         vm.stopPrank();
     }
 

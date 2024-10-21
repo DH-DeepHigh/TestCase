@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >= 0.8.0;
+import "./IComptroller.sol";
 
 interface IVToken {
 
@@ -8,6 +9,39 @@ interface IVToken {
     function allowance(address owner, address spender) external view returns (uint256);
     function accrualBlockNumber() external view returns (uint);
     function reduceReserves(uint256 reduceAmount) external;
+    //
+
+    //admin function
+    function _setPendingAdmin(address payable newPendingAdmin)  external returns (uint);
+    
+    function _acceptAdmin()  external returns (uint);
+    
+    function _setComptroller(IComptroller newComptroller)  external returns (uint);
+    
+    function _setReserveFactor(uint newReserveFactorMantissa)  external returns (uint);
+    
+    function _reduceReserves(uint reduceAmount)  external returns (uint);
+
+    
+    
+    // function _setInterestRateModel(InterestRateModel newInterestRateModel)  external returns (uint);
+
+    function implementation() external returns(address);
+
+    function initialize(
+        address underlying_,
+        address comptroller_,
+        address interestRateModel_,
+        uint256 initialExchangeRateMantissa_,
+        string memory name_,
+        string memory symbol_,
+        uint8 decimals_,
+        address admin_,
+        address accessControlManager_,
+        address riskManagement,
+        uint256 reserveFactorMantissa_
+    ) external;
+
     //
     
     function balanceOf(address owner) external view returns (uint256);
