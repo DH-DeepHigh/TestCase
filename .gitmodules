@@ -1,6 +1,3 @@
-[submodule "Aave/lib/forge-std"]
-	path = Aave/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
 [submodule "Venus/Isolated/lib/forge-std"]
 	path = Venus/Isolated/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
