@@ -62,8 +62,8 @@ contract RepaymentTest is Test {
         assert(MintAWETH == 10 * 1e18);
 
         Pool.borrow(address(DAI), 10_000 * 1e18, 2, 0, user_1);
-        uint256 BorrowUSDT = IERC20(address(DAI)).balanceOf(user_1);
-        assert(BorrowUSDT == 10_000 * 1e18);
+        uint256 BorrowDAI = IERC20(address(DAI)).balanceOf(user_1);
+        assert(BorrowDAI == 10_000 * 1e18);
 
         DAI.approve(address(Pool), type(uint256).max);
         Pool.repay(address(DAI), 10_000 * 1e18, 2, user_1);
@@ -82,8 +82,8 @@ contract RepaymentTest is Test {
         assert(MintAWETH == 10 * 1e18);
 
         Pool.borrow(address(DAI), 10_000 * 1e18, 2, 0, user_1);
-        uint256 BorrowUSDT = IERC20(address(DAI)).balanceOf(user_1);
-        assert(BorrowUSDT == 10_000 * 1e18);
+        uint256 BorrowDAI = IERC20(address(DAI)).balanceOf(user_1);
+        assert(BorrowDAI == 10_000 * 1e18);
 
         EUL.approve(address(Pool), type(uint256).max);
         vm.expectRevert();
@@ -101,8 +101,8 @@ contract RepaymentTest is Test {
         assert(MintAWETH == 10 * 1e18);
 
         Pool.borrow(address(DAI), 10_000 * 1e18, 2, 0, user_1);
-        uint256 BorrowUSDT = IERC20(address(DAI)).balanceOf(user_1);
-        assert(BorrowUSDT == 10_000 * 1e18);
+        uint256 BorrowDAI = IERC20(address(DAI)).balanceOf(user_1);
+        assert(BorrowDAI == 10_000 * 1e18);
 
         DataTypes.ReserveData memory DAIData = Pool.getReserveData(address(DAI));
         assert(DAIData.lastUpdateTimestamp == block.timestamp);
@@ -111,7 +111,6 @@ contract RepaymentTest is Test {
     }
 
     function test_repay_cannot_repay_overDebt() public {
-        deal(address(DAI), user_1, 100_000_000 * 1e18);
         vm.startPrank(user_1);
 
         Pool.supply(address(WETH), 10 * 1e18, user_1, 0);
@@ -120,12 +119,14 @@ contract RepaymentTest is Test {
         assert(MintAWETH == 10 * 1e18);
 
         Pool.borrow(address(DAI), 10_000 * 1e18, 2, 0, user_1);
-        uint256 BorrowUSDT = IERC20(address(DAI)).balanceOf(user_1);
-        assert(BorrowUSDT == 10_000 * 1e18);
+        uint256 BorrowDAI = IERC20(address(DAI)).balanceOf(user_1);
+        assert(BorrowDAI == 10_000 * 1e18);
 
         DAI.approve(address(Pool), type(uint256).max);
-        vm.expectRevert();
+        deal(address(DAI), user_1, 100_000 * 1e18);
         Pool.repay(address(DAI), 100_000 * 1e18, 2, user_1);
+        uint256 RemainDAI = DAI.balanceOf(user_1);
+        assert(RemainDAI == 90_000 * 1e18);
 
         vm.stopPrank();
     }

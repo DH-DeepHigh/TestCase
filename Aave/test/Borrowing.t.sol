@@ -11,6 +11,7 @@ import "../src/Mock/AddressList.sol";
 import "../src/protocol/libraries/types/DataTypes.sol";
 import "../src/protocol/libraries/configuration/ReserveConfiguration.sol";
 import "../src/protocol/libraries/logic/ReserveLogic.sol";
+import "../src/protocol/libraries/helpers/Errors.sol";
 
 
 contract BorrowingTest is Test {
@@ -86,7 +87,7 @@ contract BorrowingTest is Test {
         PoolConfigurator.setReservePause(address(DAI), true);
 
         vm.prank(user_1);
-        vm.expectRevert();
+        vm.expectRevert(bytes(Errors.RESERVE_PAUSED));
         Pool.borrow(address(DAI), 10_000 * 1e18, 2, 0, user_1);
 
     }
@@ -124,7 +125,7 @@ contract BorrowingTest is Test {
         uint256 MintAWETH = IERC20(address(ReserveData.aTokenAddress)).balanceOf(user_1);
         assert(MintAWETH == 500_000 * 1e18);
 
-        vm.expectRevert();
+        vm.expectRevert(bytes(Errors.BORROW_CAP_EXCEEDED));
         Pool.borrow(address(DAI), 200_000_000 * 1e18, 2, 0, user_1);
 
         vm.stopPrank();
@@ -138,7 +139,7 @@ contract BorrowingTest is Test {
         uint256 MintAWETH = IERC20(address(WETHData.aTokenAddress)).balanceOf(user_1);
         assert(MintAWETH == 10 * 1e18);
 
-        vm.expectRevert();
+        vm.expectRevert(bytes(Errors.COLLATERAL_CANNOT_COVER_NEW_BORROW));
         Pool.borrow(address(DAI), 2_000_000 * 1e18, 2, 0, user_1);
 
         vm.stopPrank();
@@ -176,7 +177,7 @@ contract BorrowingTest is Test {
         uint256 MintAWETH = IERC20(address(WETHData.aTokenAddress)).balanceOf(user_1);
         assert(MintAWETH == 100_000 * 1e18);
 
-        vm.expectRevert();
+        vm.expectRevert(bytes(Errors.INVALID_AMOUNT));
         Pool.borrow(address(DAI), MaxBorrowValue + 1, 2, 0, user_1);
 
         vm.stopPrank();
