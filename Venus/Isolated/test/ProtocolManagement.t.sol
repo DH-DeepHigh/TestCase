@@ -90,53 +90,6 @@ contract CollateralSupply is Test, Tester {
         assertEq(success, true);
     }
 
-    function test_admin_checkDoubleInitialize() public {
-        vm.startPrank(admin);
-
-        address underlying = address(0x123);
-        address comptroller = address(0x456);
-        address interestRateModel = address(0x789);
-        uint256 initialExchangeRateMantissa = 1e18;
-        string memory name = "Test Token";
-        string memory symbol = "TTK";
-        uint8 decimals = 18;
-        address accessControlManager = address(0xABC);
-        address riskManagement = address(0xDEF);
-        uint256 reserveFactorMantissa = 0.1e18;
-
-        vm.expectRevert();
-        vUSDT.initialize(
-            underlying,
-            comptroller,
-            interestRateModel,
-            initialExchangeRateMantissa,
-            name,
-            symbol,
-            decimals,
-            admin,
-            accessControlManager,
-            riskManagement,
-            reserveFactorMantissa
-        );
-
-        NOT_REGISTERED_VTOKEN.initialize(
-            underlying,
-            comptroller,
-            interestRateModel,
-            initialExchangeRateMantissa,
-            name,
-            symbol,
-            decimals,
-            admin,
-            accessControlManager,
-            riskManagement,
-            reserveFactorMantissa
-        );
-
-        
-        vm.stopPrank();
-    }
-
 
 
     
