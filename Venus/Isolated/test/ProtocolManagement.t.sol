@@ -23,6 +23,22 @@ contract CollateralSupply is Test, Tester {
         comptroller.setPriceOracle(address(0x2));
     }
 
+    function test_admin_checkAccrueBlock() public {
+        vm.startPrank(admin);
+        vUSDT.reduceReserves(1e18);
+        assertEq(vUSDT.accrualBlockNumber(), block.number);
+    }
+
+    function test_admin_checkReserveAmount() public {
+        vm.startPrank(admin);
+        uint reserves = vUSDT.totalReserves();
+        
+        vm.expectRevert();
+        // vUSDT.reduceReserves(reserves + 1);
+
+        vUSDT.reduceReserves(reserves);
+    }
+
     function test_setPause() public {
         vm.startPrank(user);
 

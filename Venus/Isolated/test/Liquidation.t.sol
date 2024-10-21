@@ -6,62 +6,62 @@ import {Tester} from "../src/utils/Tester.sol";
 
 contract CollateralSupply is Test, Tester {
 
-    address user = address(0x1234);
-    address user2 = address(0x2345);
+    address liquidator = address(0x1234);
+    address liquidator2 = address(0x2345);
     uint amount = 1000 * 1e18;
     uint borrowAmount = 100 * 1e18;
 
     function setUp() public {
         cheat.createSelectFork("bsc_mainnet", BLOCK_NUMBER);
-        deal(address(USDT), user, amount);
-        deal(address(USDD), user2, borrowAmount * 10);
+        deal(address(USDT), liquidator, amount);
+        deal(address(USDD), liquidator2, borrowAmount * 10);
 
-        vm.startPrank(user);
+        vm.startPrank(liquidator);
         USDT.approve(address(vUSDT), amount);
         vm.stopPrank();
 
-        vm.startPrank(user2);
+        vm.startPrank(liquidator2);
         USDD.approve(address(vUSDD), borrowAmount * 10);
         vm.stopPrank();
 
-        // user's Borrowing
-        vm.startPrank(user);
+        // liquidator's Borrowing
+        vm.startPrank(liquidator);
         vUSDT.mint(amount);
 
         address[] memory vTokens = new address[](1);
         vTokens[0] = address(vUSDT);
         gComptroller.enterMarkets(vTokens);        
 
-        address[] memory assetsIn = gComptroller.getAssetsIn(user);
+        address[] memory assetsIn = gComptroller.getAssetsIn(liquidator);
         assertEq(assetsIn[0], address(vUSDT));
 
         vUSDD.borrow(borrowAmount);
-        assertEq(USDD.balanceOf(user), borrowAmount);
+        assertEq(USDD.balanceOf(liquidator), borrowAmount);
         vm.stopPrank();
     }
 
     function test_liquidate_checkMarket() public {
 
-        vm.startPrank(user2);
+        vm.startPrank(liquidator2);
         uint factor = gComptroller.closeFactorMantissa();
-        uint borrowed = vUSDD.borrowBalanceCurrent(user);
+        uint borrowed = vUSDD.borrowBalanceCurrent(liquidator);
         uint liquidateAmount = (borrowed * factor) / 1e18;
 
         vm.expectRevert();
-        vUSDD.liquidateBorrow(user, liquidateAmount, NOT_REGISTERED_VTOKEN);
+        vUSDD.liquidateBorrow(liquidator, liquidateAmount, NOT_REGISTERED_VTOKEN);
         // set_oracle();
-        // vUSDD.liquidateBorrow(user, liquidateAmount, vUSDT);
+        // vUSDD.liquidateBorrow(liquidator, liquidateAmount, vUSDT);
         vm.stopPrank();
     }
 
     function test_liquidate_checkLTV() public {
-        vm.startPrank(user2);
+        vm.startPrank(liquidator2);
         uint factor = gComptroller.closeFactorMantissa();
-        uint borrowed = vUSDD.borrowBalanceCurrent(user);
+        uint borrowed = vUSDD.borrowBalanceCurrent(liquidator);
         uint liquidateAmount = (borrowed * factor) / 1e18;
 
         vm.expectRevert();  // 0x095bf333. error InsufficientShortfall
-        vUSDD.liquidateBorrow(user, liquidateAmount, vUSDT);
+        vUSDD.liquidateBorrow(liquidator, liquidateAmount, vUSDT);
         vm.stopPrank();
 
     }
