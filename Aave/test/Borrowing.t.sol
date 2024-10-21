@@ -13,7 +13,6 @@ import "../src/protocol/libraries/configuration/ReserveConfiguration.sol";
 import "../src/protocol/libraries/logic/ReserveLogic.sol";
 import "../src/protocol/libraries/helpers/Errors.sol";
 
-
 contract BorrowingTest is Test {
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using ReserveLogic for DataTypes.ReserveCache;
@@ -27,6 +26,7 @@ contract BorrowingTest is Test {
     address user_1;
     address user_2;
     address ACLAdmin;
+
     function setUp() public {
         vm.createSelectFork("ETH_RPC_URL", TestState.BLOCK_NUMBER);
 
@@ -55,6 +55,9 @@ contract BorrowingTest is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @notice 유저가 WETH를 공급하고 DAI를 대출하는 기본적인 시나리오를 테스트합니다.
+     */
     function test_borrow_simple() public {
         vm.startPrank(user_1);
 
@@ -74,6 +77,9 @@ contract BorrowingTest is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @notice 관리자가 DAI 대출을 중지시킨 후, 대출이 중단되었는지 테스트합니다.
+     */
     function test_borrow_pause() public {
         vm.startPrank(user_1);
 
@@ -92,6 +98,9 @@ contract BorrowingTest is Test {
 
     }
 
+    /**
+     * @notice 사용자가 존재하지 않는 마켓(EUL)을 대출하려 시도하는 경우를 테스트합니다.
+     */
     function test_borrow_market_exist() public {
         vm.startPrank(user_1);
 
@@ -106,6 +115,9 @@ contract BorrowingTest is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @notice DAI의 대출 한도를 초과하여 대출하려는 경우를 테스트합니다.
+     */
     function test_borrow_below_borrow_cap() public {
         // 271000000    dai  BorrowCap
         // 338000000    dai  supplyCap
@@ -131,6 +143,9 @@ contract BorrowingTest is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @notice 충분한 담보가 없을 때, 대출이 실패하는지 테스트합니다.
+     */
     function test_borrow_liquidity_check() public {
         vm.startPrank(user_1);
 
@@ -145,7 +160,10 @@ contract BorrowingTest is Test {
         vm.stopPrank();
     }
 
-        function test_borrow_accrue_block() public {
+    /**
+     * @notice 대출을 실행하는데 있어, 대출 시장의 블록 상태가 최신 상태로 갱신되어 있는지 테스트합니다.
+     */
+    function test_borrow_accrue_block() public {
         vm.startPrank(user_1);
         Pool.supply(address(WETH), 10 * 1e18, user_1, 0);
 
@@ -163,6 +181,9 @@ contract BorrowingTest is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @notice 시장 내 대출 가능한 자산보다 더 많은 자산을 대출하려고 할 때의 실패를 테스트합니다.
+     */
     function test_borrow_over_market_balance() public {
         DataTypes.ReserveData memory DAIData = Pool.getReserveData(address(DAI));
         uint256 TotalSupply = IERC20(address(DAIData.aTokenAddress)).totalSupply();
@@ -181,7 +202,5 @@ contract BorrowingTest is Test {
         Pool.borrow(address(DAI), MaxBorrowValue + 1, 2, 0, user_1);
 
         vm.stopPrank();
-
     }
-
 }
