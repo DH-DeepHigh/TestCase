@@ -25,6 +25,7 @@ contract RepaymentTest is Test {
     address user_1;
     address user_2;
     address ACLAdmin;
+    
     function setUp() public {
         vm.createSelectFork("ETH_RPC_URL", TestState.BLOCK_NUMBER);
 
@@ -53,6 +54,9 @@ contract RepaymentTest is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @notice 유저가 대출을 실행하고 그 후 해당 대출을 상환하는 기본적인 시나리오를 테스트합니다.
+     */
     function test_repay_simple() public {
         vm.startPrank(user_1);
 
@@ -73,6 +77,9 @@ contract RepaymentTest is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @notice 존재하지 않는 마켓(EUL)에서 자산을 상환하려 시도하는 경우를 테스트합니다.
+     */
     function test_repay_market_exist() public {
         vm.startPrank(user_1);
 
@@ -92,6 +99,9 @@ contract RepaymentTest is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @notice 자산 상환 시 블록 상태가 최신 상태로 갱신되는지 테스트합니다.
+     */
     function test_repay_accrue_block() public {
         vm.startPrank(user_1);
 
@@ -110,6 +120,9 @@ contract RepaymentTest is Test {
         vm.stopPrank();
     }
 
+    /**
+     * @notice 유저가 대출 총액을 초과하여 상환하려고 할 때 실패하는지 테스트합니다.
+     */
     function test_repay_cannot_repay_overDebt() public {
         vm.startPrank(user_1);
 

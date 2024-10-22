@@ -146,7 +146,7 @@ contract BorrowingTest is Test {
     /**
      * @notice 충분한 담보가 없을 때, 대출이 실패하는지 테스트합니다.
      */
-    function test_borrow_liquidity_check() public {
+    function test_borrow_LTV_check() public {
         vm.startPrank(user_1);
 
         Pool.supply(address(WETH), 10 * 1e18, user_1, 0);
@@ -186,8 +186,8 @@ contract BorrowingTest is Test {
      */
     function test_borrow_over_market_balance() public {
         DataTypes.ReserveData memory DAIData = Pool.getReserveData(address(DAI));
-        uint256 TotalSupply = IERC20(address(DAIData.aTokenAddress)).totalSupply();
-        uint256 VariableDebtDai = IERC20(address(DAIData.variableDebtTokenAddress)).balanceOf(address(Pool));
+        uint256 TotalSupply = IERC20(DAIData.aTokenAddress).totalSupply();
+        uint256 VariableDebtDai = IERC20(DAIData.variableDebtTokenAddress).totalSupply();
         uint256 MaxBorrowValue = TotalSupply - VariableDebtDai;
         deal(address(WETH), user_1, 1_000_000 * 1e18);
 
