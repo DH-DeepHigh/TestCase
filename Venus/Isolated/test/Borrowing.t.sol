@@ -68,6 +68,7 @@ contract CollateralSupply is Test, Tester {
         vUSDD.borrow(borrowAmount);
         result = gComptroller.checkMembership(borrower2, address(vUSDT));
         assertEq(result, true);
+
         vm.stopPrank();
     }
 
@@ -83,7 +84,7 @@ contract CollateralSupply is Test, Tester {
         vm.startPrank(rich_man);
         deal(address(vUSDT), rich_man, 10000000 * 1e18);
         
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("BorrowCapExceeded(address,uint256)")), address(vUSDD), uint256(borrowCap)));
         vUSDD.borrow(gap + 1);
         vUSDT.borrow(vUSDT.balanceOf(borrower));
     }
@@ -95,7 +96,7 @@ contract CollateralSupply is Test, Tester {
         console.log("shortfall : ", shortfall);
         assertGt(shortfall, 0);
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InsufficientLiquidity()"))));
         vUSDT.borrow(amount);
         vUSDT.borrow(borrowAmount);
     }
@@ -113,7 +114,7 @@ contract CollateralSupply is Test, Tester {
         uint totalReserve = vUSDD.totalReserves();
         console.log("totalReserve : ", totalReserve);
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("BorrowCashNotAvailable()"))));
         // _getCashPrior() - totalReserves < borrowAmount   
         vUSDD.borrow(USDD.balanceOf(address(vUSDD)) - totalReserve);
         vm.stopPrank();
@@ -123,7 +124,7 @@ contract CollateralSupply is Test, Tester {
         vm.startPrank(borrower);
         vUSDD.borrow(1);
 
-        vm.expectRevert();  // 0xbb55fd27. error InsufficientLiquidity
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InsufficientLiquidity()"))));
         gComptroller.exitMarket(address(vUSDT));
         vm.stopPrank();
     }

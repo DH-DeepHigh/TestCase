@@ -19,7 +19,7 @@ contract CollateralSupply is Test, Tester {
         vm.stopPrank();
 
         vm.startPrank(user);
-        vm.expectRevert();
+        vm.expectRevert("Ownable: caller is not the owner");
         comptroller.setPriceOracle(address(0x2));
     }
 
@@ -33,7 +33,7 @@ contract CollateralSupply is Test, Tester {
         vm.startPrank(admin);
         uint reserves = vUSDT.totalReserves();
         
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("ReduceReservesCashValidation()"))));
         vUSDT.reduceReserves(reserves + 3.156944 * 1e18);
         reserves = vUSDT.totalReserves();
         vUSDT.reduceReserves(reserves + 3.156943 * 1e18);
@@ -49,7 +49,7 @@ contract CollateralSupply is Test, Tester {
         vm.stopPrank();
 
         vm.startPrank(user);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized(address,address,string)")), address(user), address(comptroller), "setCloseFactor(uint256)"));
         comptroller.setCloseFactor(0.55e18);
         vm.stopPrank();
 
@@ -62,7 +62,7 @@ contract CollateralSupply is Test, Tester {
         vm.stopPrank();
 
         vm.startPrank(user);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized(address,address,string)")), address(user), address(comptroller), "setLiquidationIncentive(uint256)"));
         comptroller.setLiquidationIncentive(1.1e18);
         vm.stopPrank();
 
@@ -81,6 +81,7 @@ contract CollateralSupply is Test, Tester {
         actionsList[3] = Action.REPAY;
         actionsList[4] = Action.LIQUIDATE;
 
+        // vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized(address,address,string)")), address(user), address(comptroller), "setActionsPaused(address,address,bool)"));
         vm.expectRevert();
         comptroller.setActionsPaused(marketsList, actionsList, true);
         vm.stopPrank();
