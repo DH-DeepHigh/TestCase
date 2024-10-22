@@ -81,8 +81,7 @@ contract CollateralSupply is Test, Tester {
         actionsList[3] = Action.REPAY;
         actionsList[4] = Action.LIQUIDATE;
 
-        // vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized(address,address,string)")), address(user), address(comptroller), "setActionsPaused(address,address,bool)"));
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("Unauthorized(address,address,string)")), address(user), address(comptroller), "setActionsPaused(address[],uint256[],bool)"));
         comptroller.setActionsPaused(marketsList, actionsList, true);
         vm.stopPrank();
 
@@ -90,9 +89,5 @@ contract CollateralSupply is Test, Tester {
         bool success = isPaused(address(comptroller), address(vETH), Action.MINT);
         assertEq(success, true);
     }
-
-
-
-    
     
 }
