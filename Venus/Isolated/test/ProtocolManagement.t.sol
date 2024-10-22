@@ -86,8 +86,11 @@ contract CollateralSupply is Test, Tester {
         vm.stopPrank();
 
         Pause(address(comptroller), address(vETH));
-        bool success = isPaused(address(comptroller), address(vETH), Action.MINT);
-        assertEq(success, true);
+        assertEq(isPaused(address(comptroller), address(vETH), Action.MINT), true);
+        assertEq(isPaused(address(comptroller), address(vETH), Action.REDEEM), true);
+        assertEq(isPaused(address(comptroller), address(vETH), Action.BORROW), true);
+        assertEq(isPaused(address(comptroller), address(vETH), Action.REPAY), true);
+        assertEq(isPaused(address(comptroller), address(vETH), Action.LIQUIDATE), true);
     }
     
 }
