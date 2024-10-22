@@ -36,7 +36,9 @@ contract CollateralSupply is Test, Tester {
         Pause(address(comptroller), address(vETH));
 
         vm.startPrank(lender);
-        vm.expectRevert();
+
+        // MINT : 0, REDEEM : 1, BORROW : 2, REPAY : 3, LIQUIDATE : 5
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("ActionPaused(address,uint8)")), address(vETH), uint8(0)));
         vETH.mint(amount);
         vm.stopPrank();
 

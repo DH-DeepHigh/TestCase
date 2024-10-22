@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {Tester} from "../src/utils/Tester.sol";
 import {Action} from "../src/interfaces/IComptroller.sol";
+import "forge-std/StdError.sol";
 
 contract CollateralSupply is Test, Tester {
 
@@ -64,7 +65,7 @@ contract CollateralSupply is Test, Tester {
         console.log("shortfall : ", shortfall);
         assertGt(shortfall, 0);
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InsufficientLiquidity()"))));
         vUSDT.redeem(value + 1);
     }
 
@@ -84,7 +85,7 @@ contract CollateralSupply is Test, Tester {
         uint mintTokens = amount * 1e18 / exchangeRate;
         assertEq(vUSDTAmount, mintTokens);
 
-        vm.expectRevert();
+        vm.expectRevert(stdError.arithmeticError);
         vUSDT.redeem(mintTokens + 1);
         vUSDT.redeem(mintTokens);
     }
@@ -103,7 +104,7 @@ contract CollateralSupply is Test, Tester {
 
         vUSDD.borrow(1);
 
-        vm.expectRevert();  // 0xbb55fd27. error InsufficientLiquidity
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InsufficientLiquidity()"))));
         gComptroller.exitMarket(address(vUSDT));
         vm.stopPrank();
     }

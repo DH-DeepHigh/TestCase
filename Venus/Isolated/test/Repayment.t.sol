@@ -58,7 +58,7 @@ contract CollateralSupply is Test, Tester {
 
     function test_repay_checkOut() public {
         vm.startPrank(repayer);
-        vm.expectRevert();  // 0xbb55fd27. error InsufficientLiquidity
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InsufficientLiquidity()"))));
         gComptroller.exitMarket(address(vUSDT));
 
         vUSDD.repayBorrow(borrowAmount);
@@ -69,7 +69,7 @@ contract CollateralSupply is Test, Tester {
     function test_repay_checkOutBehalf() public {
         vm.startPrank(repayer);
 
-        vm.expectRevert();  // 0xbb55fd27. error InsufficientLiquidity
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InsufficientLiquidity()"))));
         gComptroller.exitMarket(address(vUSDT));
 
         vm.stopPrank();

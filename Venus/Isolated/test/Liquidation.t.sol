@@ -49,8 +49,6 @@ contract CollateralSupply is Test, Tester {
 
         vm.expectRevert();
         vUSDD.liquidateBorrow(liquidator, liquidateAmount, NOT_REGISTERED_VTOKEN);
-        // set_oracle();
-        // vUSDD.liquidateBorrow(liquidator, liquidateAmount, vUSDT);
         vm.stopPrank();
     }
 
@@ -60,19 +58,10 @@ contract CollateralSupply is Test, Tester {
         uint borrowed = vUSDD.borrowBalanceCurrent(liquidator);
         uint liquidateAmount = (borrowed * factor) / 1e18;
 
-        vm.expectRevert();  // 0x095bf333. error InsufficientShortfall
+        vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("InsufficientShortfall()"))));
         vUSDD.liquidateBorrow(liquidator, liquidateAmount, vUSDT);
         vm.stopPrank();
 
     }
-
-    // function set_oracle() public {
-    //     uint newPrice = oracle.getUnderlyingPrice(address(vUSDT)) / 9;
-    //     vm.mockCall(
-    //         address(oracle),
-    //         abi.encodeWithSelector(oracle.getUnderlyingPrice.selector, address(vUSDT)),
-    //         abi.encode(newPrice) 
-    //     );
-    // }
     
 }
