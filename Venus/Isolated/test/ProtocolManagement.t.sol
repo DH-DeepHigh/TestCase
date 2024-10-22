@@ -32,8 +32,6 @@ contract CollateralSupply is Test, Tester {
 
     function test_admin_checkReserveAmount() public {
         vm.startPrank(admin);
-        
-        vUSDT.accrueInterest();
         uint reserves = vUSDT.totalReserves();
 
         vm.expectRevert(abi.encodeWithSelector(bytes4(keccak256("ReduceReservesCashValidation()"))));
